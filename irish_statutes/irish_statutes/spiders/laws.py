@@ -1,10 +1,8 @@
 import datetime as dt
-import json
-from pathlib import Path
-
+import re
+from urllib.parse import urljoin
 
 import scrapy
-
 
 class LawsSpider(scrapy.Spider):
     name = "laws"
@@ -16,17 +14,40 @@ class LawsSpider(scrapy.Spider):
         MAX_YEAR = dt.datetime.now().year
         BASE_ACT_URL = "https://www.irishstatutebook.ie/eli/{year}/act/"
         urls = [BASE_ACT_URL.format(year=year) for year in range(MIN_YEAR, MAX_YEAR)]
-        self.log(f"{urls=}")
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-        self.log(f"{response=}")
         year = response.url.split("/")[-3]
-        tbls = response.css('div.acts-datatables')
         public_acts = response.css('#public-acts')
         links, names = public_acts.css('a::attr(href)').getall(), public_acts.css('a::text').getall()
         links_html = [x for x in links if x.endswith('.html')]
-        name_link_dict = {name: link for name, link in zip(names, links_html)}
-        name_link_dict['year'] = year
-        yield name_link_dict
+        
+        for name, link in zip(names, links_html):
+            transformed_url = self.transform_url(link, year)
+            if transformed_url:
+                yield scrapy.Request(transformed_url, callback=self.parse_act, meta={'name': name, 'year': year})
+
+    def transform_url(self, original_url, year):
+        # Extract the act number from the original URL
+        match = re.search(r'/(\d+)/index\.html$', original_url)
+        if match:
+            act_number = match.group(1)
+            # Construct the new URL
+            new_url = f"/eli/{year}/act/{act_number}/enacted/en/print.html"
+            return urljoin(self.start_urls[0], new_url)
+        return None
+
+    def parse_act(self, response):
+        name = response.meta['name']
+        year = response.meta['year']
+        
+        # Extract the full text of the act
+        full_text = response.css('body').extract_first()
+        
+        yield {
+            'name': name,
+            'year': year,
+            'url': response.url,
+            'full_text': full_text
+        }
