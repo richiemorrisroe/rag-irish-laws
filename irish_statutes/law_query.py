@@ -40,56 +40,12 @@ Settings.llm = Ollama(model="llama3", request_timeout=180.0)
 logging.warning("set up Ollama")
 
 
-def get_files_from_directory(directory):
-    res = glob.glob(directory + '/*')
-    return res
 
-
-def indexing(input_files):
-    documents = SimpleDirectoryReader(
-        input_files=input_files,
-        recursive=True,
-        filename_as_id=True,
-    ).load_data()
-
-
-def batch_files(directory, batch_size=None, included_exts=None):
-    if included_exts is None:
-        included_exts = ['.txt']
-    if batch_size is None:
-        batch_size = 10
-
-    all_files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if any(fnmatch.fnmatch(file, "*" + ext) for ext in included_exts):
-                all_files.append(os.path.join(root, file))
-
-    batches = [
-        all_files[i: i + batch_size] for i in range(0, len(all_files), batch_size)
-    ]
-
-    return batches, len(all_files)
-
-
-files = get_files_from_directory(DATA_DIR)
-
-all_batches, total_count = batch_files(DATA_DIR, 10)
-logger.warning(f"{all_batches=}, {total_count=}")
 
 PERSIST_DIR = "./storage"
 if not os.path.exists(PERSIST_DIR):
     
     logging.warning("you should run `law_index.py` to generate an index first")
-    # parser = FlatReader()
-    # file_extractor = {".txt": parser}
-    # # documents = SimpleDirectoryReader(
-    # #     DATA_DIR, file_extractor=file_extractor
-    # # ).load_data()
-    # documents = indexing(files)
-    # index = VectorStoreIndex.from_documents(documents)
-    # # store it for later
-    # index.storage_context.persist(persist_dir=PERSIST_DIR)
     raise ValueError("please run law_index.py first")
 else:
     # load the existing index
