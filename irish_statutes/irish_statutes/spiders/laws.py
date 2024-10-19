@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 
 import scrapy
 
+
 class LawsSpider(scrapy.Spider):
     name = "laws"
     allowed_domains = ["www.irishstatutebook.ie"]
@@ -12,17 +13,20 @@ class LawsSpider(scrapy.Spider):
     def start_requests(self):
         MIN_YEAR = 2000
         MAX_YEAR = dt.datetime.now().year
+        # MAX_YEAR = 2001
         BASE_ACT_URL = "https://www.irishstatutebook.ie/eli/{year}/act/"
-        urls = [BASE_ACT_URL.format(year=year) for year in range(MIN_YEAR, MAX_YEAR)]
+        urls = [BASE_ACT_URL.format(year=year)
+                for year in range(MIN_YEAR, MAX_YEAR)]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         year = response.url.split("/")[-3]
         public_acts = response.css('#public-acts')
-        links, names = public_acts.css('a::attr(href)').getall(), public_acts.css('a::text').getall()
+        links, names = public_acts.css(
+            'a::attr(href)').getall(), public_acts.css('a::text').getall()
         links_html = [x for x in links if x.endswith('.html')]
-        
+
         for name, link in zip(names, links_html):
             transformed_url = self.transform_url(link, year)
             if transformed_url:
@@ -33,6 +37,10 @@ class LawsSpider(scrapy.Spider):
         match = re.search(r'/(\d+)/index\.html$', original_url)
         if match:
             act_number = match.group(1)
+            self.log(f"{act_number=}")
+            act_number = int(act_number)
+            self.log(f"{act_number=}")
+
             # Construct the new URL
             new_url = f"/eli/{year}/act/{act_number}/enacted/en/print.html"
             return urljoin(self.start_urls[0], new_url)
@@ -41,13 +49,15 @@ class LawsSpider(scrapy.Spider):
     def parse_act(self, response):
         name = response.meta['name']
         year = response.meta['year']
-        
+
         # Extract the full text of the act
+        plain_text = response.css('body::text').extract_first()
         full_text = response.css('body').extract_first()
-        
+
         yield {
             'name': name,
             'year': year,
             'url': response.url,
-            'full_text': full_text
+            'full_text': full_text,
+            'plain_text': plain_text
         }
