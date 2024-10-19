@@ -79,26 +79,28 @@ logger.warning(f"{all_batches=}, {total_count=}")
 
 PERSIST_DIR = "./storage"
 if not os.path.exists(PERSIST_DIR):
-    logging.warning("got to reading files")
-    parser = FlatReader()
-    file_extractor = {".txt": parser}
-    # documents = SimpleDirectoryReader(
-    #     DATA_DIR, file_extractor=file_extractor
-    # ).load_data()
-    documents = indexing(files)
-    index = VectorStoreIndex.from_documents(documents)
-    # store it for later
-    index.storage_context.persist(persist_dir=PERSIST_DIR)
+    
+    logging.warning("you should run `law_index.py` to generate an index first")
+    # parser = FlatReader()
+    # file_extractor = {".txt": parser}
+    # # documents = SimpleDirectoryReader(
+    # #     DATA_DIR, file_extractor=file_extractor
+    # # ).load_data()
+    # documents = indexing(files)
+    # index = VectorStoreIndex.from_documents(documents)
+    # # store it for later
+    # index.storage_context.persist(persist_dir=PERSIST_DIR)
+    raise ValueError("please run law_index.py first")
 else:
     # load the existing index
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 
 
-# if not args.query:
-#     query = "What are the requirements for data protection in ireland?"
-# else:
-#     query = args.query
-# query_engine = index.as_query_engine()
-# response = query_engine.query(query)
-# print(response)
+if not args.query:
+    query = "What are the requirements for data protection in ireland?"
+else:
+    query = args.query
+query_engine = index.as_query_engine()
+response = query_engine.query(query)
+print(response)
