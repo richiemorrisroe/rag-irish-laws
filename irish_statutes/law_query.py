@@ -14,10 +14,11 @@ from llama_index.llms.ollama import Ollama
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--query")
+parser.add_argument("--data_dir")
 
 args = parser.parse_args()
 
-DATA_DIR = './laws_test'
+# DATA_DIR = './laws_test'
 
 
 logger = logging.getLogger()
@@ -41,8 +42,11 @@ logging.warning("set up Ollama")
 
 
 
-
-PERSIST_DIR = "./full_storage"
+if not args.data_dir:
+    PERSIST_DIR = "./full_storage"
+else:
+    PERSIST_DIR = args.data_dir
+    
 if not os.path.exists(PERSIST_DIR):
     
     logging.warning("you should run `law_index.py` to generate an index first")
