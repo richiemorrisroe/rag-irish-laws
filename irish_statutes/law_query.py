@@ -5,6 +5,10 @@ import logging
 import os
 import sys
 
+from pprint import pprint
+
+from IPython.display import display
+
 from llama_index.core import (SimpleDirectoryReader, VectorStoreIndex, Settings, StorageContext,
                               load_index_from_storage)
 from llama_index.readers.file import FlatReader
@@ -40,6 +44,14 @@ logging.warning("downloaded embedding model")
 Settings.llm = Ollama(model="llama3", request_timeout=180.0)
 logging.warning("set up Ollama")
 
+def display_prompt_dict(prompts_dict):
+    for k, p in prompts_dict.items():
+        text_md = f"**Prompt Key**: {k}<br>" f"**Text:** <br>"
+        pprint(text_md)
+        print(p.get_template())
+        # display(Markdown("<br><br>"))
+
+        
 
 
 if not args.data_dir:
@@ -62,6 +74,8 @@ if not args.query:
 else:
     query = args.query
 query_engine = index.as_query_engine(similarity_top_k=10)
+prompts_dict = query_engine.get_prompts()
+display_prompt_dict(prompts_dict)
 response = query_engine.query(query)
 logger.info(f"{response.source_nodes=}")
 print(response)
