@@ -42,7 +42,7 @@ logging.warning("set up Ollama")
 
 
 
-PERSIST_DIR = "./storage"
+PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
     
     logging.warning("you should run `law_index.py` to generate an index first")

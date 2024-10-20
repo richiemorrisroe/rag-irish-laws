@@ -4,6 +4,7 @@ import glob
 import logging
 import os
 import sys
+from multiprocessing import Pool
 
 from llama_index.core import (SimpleDirectoryReader, VectorStoreIndex, Settings, StorageContext,
                               load_index_from_storage)
@@ -17,12 +18,12 @@ parser.add_argument("--query")
 
 args = parser.parse_args()
 
-DATA_DIR = './laws_test'
+DATA_DIR = './csv_laws'
 
 
 logger = logging.getLogger()
 
-logging.basicConfig(filename='law_index.log',
+logging.basicConfig(filename='law_index_full.log',
                     encoding='utf-8', level=logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stdout)
@@ -40,17 +41,28 @@ Settings.llm = Ollama(model="llama3", request_timeout=180.0)
 logging.warning("set up Ollama")
 
 
+
+def multiprocessing_indexing(input_dir, num_processes=6):
+    all_batches, total_count = batch_files(input_dir, 10)
+    with Pool(processes=num_processes) as pool:
+        pool.map(indexing, all_batches)
+
+
 def get_files_from_directory(directory):
     res = glob.glob(directory + '/*')
     return res
 
+parser = FlatReader()
+file_extractor = {".txt": parser}
 
-def indexing(input_files):
+def indexing(input_files, file_extractor=file_extractor):
     documents = SimpleDirectoryReader(
         input_files=input_files,
         recursive=True,
         filename_as_id=True,
+        file_extractor=file_extractor,
     ).load_data()
+    return documents
 
 
 def batch_files(directory, batch_size=None, included_exts=None):
@@ -77,15 +89,14 @@ files = get_files_from_directory(DATA_DIR)
 all_batches, total_count = batch_files(DATA_DIR, 10)
 logger.warning(f"{all_batches=}, {total_count=}")
 
-PERSIST_DIR = "./storage"
+PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
     logging.warning("got to reading files")
-    parser = FlatReader()
-    file_extractor = {".txt": parser}
+    
     # documents = SimpleDirectoryReader(
     #     DATA_DIR, file_extractor=file_extractor
     # ).load_data()
-    documents = indexing(files)
+    documents = indexing(files, file_extractor)
     index = VectorStoreIndex.from_documents(documents)
     # store it for later
     index.storage_context.persist(persist_dir=PERSIST_DIR)
