@@ -23,11 +23,11 @@ args = parser.parse_args()
 
 logger = logging.getLogger()
 
-logging.basicConfig(filename='law_index.log',
+logging.basicConfig(filename='law_query.log',
                     encoding='utf-8', level=logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
+handler.setLevel(logging.WARNING)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -61,6 +61,7 @@ if not args.query:
     query = "What are the requirements for data protection in ireland?"
 else:
     query = args.query
-query_engine = index.as_query_engine()
+query_engine = index.as_query_engine(similarity_top_k=10)
 response = query_engine.query(query)
+logger.info(f"{response.source_nodes=}")
 print(response)
