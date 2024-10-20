@@ -89,6 +89,7 @@ files = get_files_from_directory(DATA_DIR)
 all_batches, total_count = batch_files(DATA_DIR, 10)
 logger.warning(f"{all_batches=}, {total_count=}")
 
+
 PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
     logging.warning("got to reading files")
