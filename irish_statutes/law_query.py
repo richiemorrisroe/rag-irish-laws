@@ -10,10 +10,15 @@ from pprint import pprint
 from IPython.display import display
 
 from llama_index.core import (SimpleDirectoryReader, VectorStoreIndex, Settings, StorageContext,
-                              load_index_from_storage)
+                              load_index_from_storage, get_response_synthesizer)
 from llama_index.readers.file import FlatReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
+
+
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.postprocessor import SimilarityPostprocessor
 
 parser = argparse.ArgumentParser()
 
@@ -75,7 +80,10 @@ else:
     query = args.query
 query_engine = index.as_query_engine(similarity_top_k=10)
 prompts_dict = query_engine.get_prompts()
-display_prompt_dict(prompts_dict)
+# display_prompt_dict(prompts_dict)
 response = query_engine.query(query)
 logger.info(f"{response.source_nodes=}")
 print(response)
+
+
+QUERIES = ["""What are the requirements for data protection under the 2018 act?""", """What is the procedure for firing an employee in Irish law?"""]
