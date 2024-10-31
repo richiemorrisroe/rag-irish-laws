@@ -11,6 +11,7 @@ from llama_index.core import (SimpleDirectoryReader, VectorStoreIndex, Settings,
 from llama_index.readers.file import FlatReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
+from llama_index.core.node_parser import HTMLNodeParser
 
 parser = argparse.ArgumentParser()
 
@@ -20,6 +21,7 @@ args = parser.parse_args()
 
 DATA_DIR = './csv_laws'
 
+parser = HTMLNodeParser()  # optional list of tags
 
 logger = logging.getLogger()
 
@@ -87,7 +89,7 @@ def batch_files(directory, batch_size=None, included_exts=None):
 files = get_files_from_directory(DATA_DIR)
 
 all_batches, total_count = batch_files(DATA_DIR, 10)
-logger.warning(f"{all_batches=}, {total_count=}")
+logger.warning(f"{total_count=}")
 
 
 PERSIST_DIR = "./full_storage"
