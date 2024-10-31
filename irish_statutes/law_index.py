@@ -13,6 +13,10 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.core.node_parser import HTMLNodeParser
 
+import psycopg2
+
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--query")
@@ -22,6 +26,16 @@ args = parser.parse_args()
 DATA_DIR = './csv_laws'
 
 parser = HTMLNodeParser()  # optional list of tags
+
+
+connection_string = "postgresql://postgres:pword@localhost:5432"
+db_name = "vector_db"
+conn = psycopg2.connect(connection_string)
+conn.autocommit = True
+
+with conn.cursor() as c:
+    c.execute(f"DROP DATABASE IF EXISTS {db_name}")
+    c.execute(f"CREATE DATABASE {db_name}")
 
 logger = logging.getLogger()
 
