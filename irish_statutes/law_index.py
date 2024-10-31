@@ -12,30 +12,37 @@ from llama_index.readers.file import FlatReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.core.node_parser import HTMLNodeParser
+from llama_index.vector_stores.postgres import PGVectorStore
 
 import psycopg2
-
+from sqlalchemy import make_url
 
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--query")
+parser.add_argument("--data_dir", default='./csv_laws')
+
+parser.add_argument("--storage-format", choices=["postgres", "file"])
 
 args = parser.parse_args()
+
+print(args)
 
 DATA_DIR = './csv_laws'
 
 parser = HTMLNodeParser()  # optional list of tags
 
 
-connection_string = "postgresql://postgres:pword@localhost:5432"
-db_name = "vector_db"
-conn = psycopg2.connect(connection_string)
-conn.autocommit = True
+if args.storage_format == 'postgres':
 
-with conn.cursor() as c:
-    c.execute(f"DROP DATABASE IF EXISTS {db_name}")
-    c.execute(f"CREATE DATABASE {db_name}")
+    connection_string = "postgresql://postgres:pword@localhost:5432"
+    db_name = "vector_db"
+    conn = psycopg2.connect(connection_string)
+    conn.autocommit = True
+
+    with conn.cursor() as c:
+        c.execute(f"DROP DATABASE IF EXISTS {db_name}")
+        c.execute(f"CREATE DATABASE {db_name}")
 
 logger = logging.getLogger()
 
@@ -105,6 +112,30 @@ files = get_files_from_directory(DATA_DIR)
 all_batches, total_count = batch_files(DATA_DIR, 10)
 logger.warning(f"{total_count=}")
 
+if args.storage_format=='postgres':
+    url = make_url(connection_string)
+    vector_store = PGVectorStore.from_params(
+        database=db_name,
+        host=url.host,
+        password=url.password,
+        port=url.port,
+        user=url.username,
+        table_name="irish_laws",
+        embed_dim=768,  # openai embedding dimension
+        hnsw_kwargs={
+            "hnsw_m": 16,
+            "hnsw_ef_construction": 64,
+            "hnsw_ef_search": 40,
+            "hnsw_dist_method": "vector_cosine_ops",
+        },
+    )
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+    documents = indexing(files, file_extractor)
+    index = VectorStoreIndex.from_documents(documents,
+                                            storage_context=storage_context,
+                                            show_progress=True)
+    index.storage_context.persist()
+
 
 PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
@@ -114,7 +145,7 @@ if not os.path.exists(PERSIST_DIR):
     #     DATA_DIR, file_extractor=file_extractor
     # ).load_data()
     documents = indexing(files, file_extractor)
-    index = VectorStoreIndex.from_documents(documents)
+    
     # store it for later
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:
