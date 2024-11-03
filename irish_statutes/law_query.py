@@ -144,6 +144,10 @@ QUERIES = ["""What are the requirements for data protection under the 2018 act?"
            """What is the national minimum hourly rate of pay?""",
            """Is it legal to drive without insurance?"""
            """What are the penalities for driving without insurance?""",
-           """Can i be prosecuted for allowing my friend to drive a vehicle on which they are not insured?"""
+           """Can i be prosecuted for allowing my friend to drive a vehicle on which they are not insured?""",
+           """What are the requirements for setting up a limited company in Ireland?""",
+           """What are the differences between a private limited company and a private unlimited company?""",
+           """Does a private limited company need to file accounts, and if so, how often?""",
+           
            
            ]
