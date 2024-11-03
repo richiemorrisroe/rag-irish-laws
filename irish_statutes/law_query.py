@@ -24,6 +24,8 @@ from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor
 
+from utils import setup_logger
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--query")
@@ -34,25 +36,25 @@ args = parser.parse_args()
 
 # DATA_DIR = './laws_test'
 
+logger = setup_logger(__file__)
+# logger = logging.getLogger()
 
-logger = logging.getLogger()
+# logging.basicConfig(filename='law_query.log',
+#                     encoding='utf-8', level=logging.DEBUG)
 
-logging.basicConfig(filename='law_query.log',
-                    encoding='utf-8', level=logging.DEBUG)
+# handler = logging.StreamHandler(sys.stdout)
+# handler.setLevel(logging.WARNING)
+# formatter = logging.Formatter(
+#     '%(asctime)s - %(filename)s - %(name)s - %(levelname)s - %(message)s')
+# handler.setFormatter(formatter)
+# logger.addHandler(handler)
 
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.WARNING)
-formatter = logging.Formatter(
-    '%(asctime)s - %(filename)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-logging.warning("extracted all plain text")
+# logging.warning("extracted all plain text")
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
-logging.warning("downloaded embedding model")
+logger.warning("downloaded embedding model")
 # ollama
 Settings.llm = Ollama(model="llama3", temperature=0.5, request_timeout=90.0)
-logging.warning("set up Ollama")
+logger.warning("set up Ollama")
 
 
 def display_prompt_dict(prompts_dict):

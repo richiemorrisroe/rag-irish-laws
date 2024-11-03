@@ -18,7 +18,7 @@ import psycopg2
 from sqlalchemy import make_url
 
 
-from .utils import setup_logger
+from utils import setup_logger
 
 
 parser = argparse.ArgumentParser()
@@ -47,7 +47,7 @@ if args.storage_format == 'postgres':
         c.execute(f"DROP DATABASE IF EXISTS {db_name}")
         c.execute(f"CREATE DATABASE {db_name}")
 
-logger = setup_logger()
+logger = setup_logger(__file__)
 
 logger.warning("extracted all plain text")
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
