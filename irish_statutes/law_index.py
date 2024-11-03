@@ -18,6 +18,9 @@ import psycopg2
 from sqlalchemy import make_url
 
 
+from .utils import setup_logger
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--data_dir", default='./csv_laws')
@@ -44,24 +47,14 @@ if args.storage_format == 'postgres':
         c.execute(f"DROP DATABASE IF EXISTS {db_name}")
         c.execute(f"CREATE DATABASE {db_name}")
 
-logger = logging.getLogger()
+logger = setup_logger()
 
-logging.basicConfig(filename='law_index_full.log',
-                    encoding='utf-8', level=logging.DEBUG)
-
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-logging.warning("extracted all plain text")
+logger.warning("extracted all plain text")
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
-logging.warning("downloaded embedding model")
+logger.warning("downloaded embedding model")
 # ollama
 Settings.llm = Ollama(model="llama3", request_timeout=180.0)
-logging.warning("set up Ollama")
+logger.warning("set up Ollama")
 
 
 
@@ -139,7 +132,7 @@ if args.storage_format=='postgres':
 
 PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
-    logging.warning("got to reading files")
+    logger.warning("got to reading files")
     
     # documents = SimpleDirectoryReader(
     #     DATA_DIR, file_extractor=file_extractor
