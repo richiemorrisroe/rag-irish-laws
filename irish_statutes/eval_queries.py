@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 from typing import Any
 
+from llama_index.llms.ollama import Ollama
+
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
 QUERIES = ["""What are the requirements for data protection under the 2018 act?""",
            """What is the procedure for firing an employee in Irish law?""",
            """what are the functions of a data protection officer?""",
@@ -50,13 +54,23 @@ class QueryResponse():
     def __repr__(self):
         return str(self.response)
 
+
+def setup_llm(temperature=0.5, timeout_secs=90):
+    llm = Ollama(model="llama3", temperature=temperature, request_timeout=timeout_secs)
+    return llm
+
+def setup_embedding():
+    embedding = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
+    return embedding
+
+
 def query_llm(index, query, top_k=2):
     query_engine = index.as_query_engine(top_k=top_k)
     response = query_engine.query(query)
     scores = [x.score for x in response.source_nodes]
     source_nodes = response.source_nodes
     return QueryResponse(query=query,
-                         response=response,
+                         response=response.response,
                          top_k=top_k,
                          scores=scores,
                          source_nodes=source_nodes)
