@@ -1,8 +1,14 @@
-from llama_index.core import Settings, VectorStoreIndex
+import os
+import sys
+
+# from llama_index.core import Settings, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from indexer.eval_queries import query_llm, setup_llm
-from indexer.vstore import get_index_from_database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+from irish_statutes.indexer.eval_queries import query_llm, setup_llm
+from irish_statutes.indexer.vstore import get_index_from_database
 
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
 
