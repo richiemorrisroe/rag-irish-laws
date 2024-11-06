@@ -1,10 +1,29 @@
-from shiny import render, ui
+from llama_index.core import Settings, VectorStoreIndex
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+from eval_queries import query_llm, setup_llm
+from vstore import get_index_from_database
+
+Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
+
+Settings.llm = setup_llm()
+
+index = get_index_from_database()
+
+from shiny import render, ui, reactive
 from shiny.express import input
 
-ui.panel_title("Hello Shiny!")
-ui.input_slider("n", "N", 0, 100, 20)
 
+query = None
+ui.panel_title("Lawbot")
+ui.input_text("query", "Enter a query")
 
-@render.text
+response = index.query(query)
+
+@reactive.effect
+def _():
+    print(input.query())
+
+@render.ui
 def txt():
-    return f"n*2 is {input.n() * 2}"
+    return f"query is {input.query()}; response is {response}"
