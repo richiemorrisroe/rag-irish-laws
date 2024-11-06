@@ -41,6 +41,8 @@ QUERIES = ["""What are the requirements for data protection under the 2018 act?"
            """Are individuals required to have health insurance?""",
            """Under what conditions can adults in Ireland be charged different
            prices for health insurance?"""
+           """What are special categories of protected data?""",
+           """What is the purpose of data protection law?"""
            ]
 
 @dataclass
