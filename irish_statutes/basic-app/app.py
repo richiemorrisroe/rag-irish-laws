@@ -1,8 +1,8 @@
 from llama_index.core import Settings, VectorStoreIndex
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from eval_queries import query_llm, setup_llm
-from vstore import get_index_from_database
+from indexer.eval_queries import query_llm, setup_llm
+from indexer.vstore import get_index_from_database
 
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
 
