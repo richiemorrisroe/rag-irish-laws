@@ -2,3 +2,5 @@
 *.html
 *.json
 *.jsonl
+*.log
+*.rdb
