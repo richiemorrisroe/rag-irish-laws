@@ -36,8 +36,8 @@ ui.input_select(
     {"1": "Yes", "0": "No", "NA": "Not yet rated"},
     selected="Not yet rated"
 )
-ui.page_opts(title="Lawbot", theme=theme.sandstone)
-
+#maybe cosmo, morph
+ui.page_opts(title="Lawbot", theme=theme.morph)
 
 
 # @reactive.effect
@@ -66,7 +66,6 @@ def answer_query():
     results_dict['response'] = resp
     results_dict['source_nodes'] = source_nodes
     results_dict['scores'] = scores
-    logger.warning(f"{results_dict=}")
     return (ui.h1('Answer'), ui.markdown(resp),
             ui.h1('Scores'), ui.markdown(scores_text),
             ui.h1('Sources'), ui.markdown(node_text_full)
