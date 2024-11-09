@@ -4,6 +4,7 @@ import re
 import sys
 from time import sleep
 
+import pandas as pd
 
 from llama_index.core import Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -33,8 +34,11 @@ query = """Does a private limited company need to file accounts,
            and if so, how often?"""
 ui.panel_title("Lawbot")
 ui.input_text("query", "Enter a query")
-
-
+ui.input_select(  
+    "select",  
+    "Is this a good answer?:",  
+    {"1A": "Yes", "1B": "No"},  
+)
 
 # @reactive.effect
 # def _():
@@ -46,28 +50,31 @@ def query_txt():
     return f"query is {input.query()}"
 
 
+results_dict = {}
 @render.ui
 def answer_query():
     sleep(2)
-    query_res = query_llm(index, input.query())
+    query_res = query_llm(index, input.query(), top_k=5)
+    
     resp = query_res.response
     source_nodes = query_res.source_nodes
+    print(len(source_nodes))
     node_text = [node.text for node in source_nodes]
     scores = query_res.scores
-    node_text_full = """\n\n** SECOND_DOCUMENT\n\n""".join(text for text in node_text)
+    scores_text = "Score2:".join(str(s) for s in scores)
+    node_text_full = "\n\n".join(text for text in node_text)
     # top_k = query_res.top_k
-    return ui.h1('Answer'), ui.markdown(resp), ui.h1('Sources'), ui.markdown(node_text_full),
+    results_dict[query] = [resp, source_nodes, scores]
+    return (ui.h1('Answer'), ui.markdown(resp),
+            ui.h1('Scores'), ui.markdown(scores_text),
+            ui.h1('Sources'), ui.markdown(node_text_full)
+            )
 
-# answer = answer_query()
+result_df = None
+if not result_df:
+    result_df = pd.DataFrame.from_dict(results_dict)
+else:
+    new_results = pd.DataFrame.from_dict(results_dict)
+    result_df = pd.concat([result_df, new_results])
 
-# @render.ui
-# def answer(answer):
-#     resp, _, _ = answer_query()
-#     return ui.markdown(resp)
-
-# @render.ui
-# def sources(answer):
-#     _, sources, _ = answer_query()
-#     sources = [re.split(r'\s{2,}', string=x.text) for x in sources]
-#     print(sources)
-#     return ui.markdown(sources[0][0])
+print(f"{result_df.head()=}")
