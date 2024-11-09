@@ -5,6 +5,9 @@ from llama_index.llms.ollama import Ollama
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
+
+from utils import setup_logger
+
 QUERIES = ["""What are the requirements for data protection under the 2018 act?""",
            """What is the procedure for firing an employee in Irish law?""",
            """what are the functions of a data protection officer?""",
@@ -41,7 +44,7 @@ QUERIES = ["""What are the requirements for data protection under the 2018 act?"
            """Are individuals required to have health insurance?""",
            """Under what conditions can adults in Ireland be charged different
            prices for health insurance?"""
-           """What are special categories of protected data?""",
+           """What are special categories of personal data?""",
            """What is the purpose of data protection law?"""
            ]
 
@@ -66,11 +69,15 @@ def setup_embedding():
     return embedding
 
 
-def query_llm(index, query, top_k=2):
+def query_llm(index, query, top_k=2, logger=None):
+    if not logger:
+        logger = setup_logger("__FILE__")
+    logger.info(f"{top_k=}")
     query_engine = index.as_query_engine(top_k=top_k)
     response = query_engine.query(query)
     scores = [x.score for x in response.source_nodes]
     source_nodes = response.source_nodes
+    logger.info(f"{len(source_nodes)=}")
     return QueryResponse(query=query,
                          response=response.response,
                          top_k=top_k,
