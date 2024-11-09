@@ -12,12 +12,12 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 # print(root_dir)
 # sys.path.append(str(root_dir))
 
-from indexer.eval_queries import query_llm, setup_llm
+from indexer.eval_queries import query_llm, setup_llm, QUERIES
 from indexer.vstore import get_index_from_database
 from indexer.utils import setup_logger
 
 from shiny import render, reactive
-from shiny.express import input, ui
+from shiny.express import input, ui, expressify
 from shinyswatch import theme
 
 Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
@@ -29,7 +29,8 @@ index = get_index_from_database()
 query = """Does a private limited company need to file accounts,
            and if so, how often?"""
 # ui.panel_title("Lawbot")
-ui.input_text("query", "Enter a query")
+# ui.input_text("query", "Enter a query")
+ui.input_select("query", "Pick a query to evaluate", choices=QUERIES, selected=QUERIES[0])
 ui.input_select(
     "select",
     "Is this a good answer?:",
@@ -66,6 +67,7 @@ def answer_query():
     results_dict['response'] = resp
     results_dict['source_nodes'] = source_nodes
     results_dict['scores'] = scores
+    add_to_results(res_dict=results_dict)
     return (ui.h1('Answer'), ui.markdown(resp),
             ui.h1('Scores'), ui.markdown(scores_text),
             ui.h1('Sources'), ui.markdown(node_text_full)
@@ -75,14 +77,14 @@ def answer_query():
 result_df = None
 
 
-@render.data_frame
-def add_to_results(result_df=result_df):
-    if not result_df:
-        results_dict["good_answer"] = input.select()
-        result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
-    else:
-        results_dict["good_answer"] = input.select()
-        new_results = pd.DataFrame.from_dict(results_dict, orient='columns')
-        result_df = pd.concat([result_df, new_results])
-        logger.warning(f"{result_df.head()=}")
+# @render.data_frame
+def add_to_results(res_dict):
+    # if not result_df:
+    #     results_dict["good_answer"] = input.select()
+    #     result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
+    # else:
+    res_dict["good_answer"] = input.select()
+    new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
+    result_df = new_results
+    logger.warning(f"{result_df.head()=}")
     return result_df
