@@ -6,7 +6,7 @@ from llama_index.llms.ollama import Ollama
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 
-from utils import setup_logger
+from .utils import setup_logger
 
 QUERIES = ["""What are the requirements for data protection under the 2018 act?""",
            """What is the procedure for firing an employee in Irish law?""",
