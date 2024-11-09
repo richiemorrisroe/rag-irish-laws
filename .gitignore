@@ -4,3 +4,9 @@
 *.jsonl
 *.log
 *.rdb
+*/pgdata/*
+*.pkl
+*.egg-info/*
+*.csv
+*csv_laws/*
+*laws_test/*
