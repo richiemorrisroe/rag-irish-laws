@@ -45,9 +45,9 @@ ui.page_opts(title="Lawbot", theme=theme.morph)
 # def _():
 #     print(input.query())
 
-@render.text
+@render.ui
 def query_txt():
-    return f"query is {input.query()}"
+    return (ui.h1("Query is"), f"{input.query()}")
 
 
 results_dict = {}
@@ -67,24 +67,26 @@ def answer_query():
     results_dict['response'] = resp
     results_dict['source_nodes'] = source_nodes
     results_dict['scores'] = scores
-    add_to_results(res_dict=results_dict)
+    # scores_df = add_to_results(result_df, res_dict=results_dict)
     return (ui.h1('Answer'), ui.markdown(resp),
             ui.h1('Scores'), ui.markdown(scores_text),
-            ui.h1('Sources'), ui.markdown(node_text_full)
+            ui.h1('Sources'), ui.markdown(node_text_full),
+            # render.data_frame(scores_df)
             )
 
 
 result_df = None
+res_dict = None
 
 
-# @render.data_frame
-def add_to_results(res_dict):
-    # if not result_df:
-    #     results_dict["good_answer"] = input.select()
-    #     result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
-    # else:
-    res_dict["good_answer"] = input.select()
-    new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
-    result_df = new_results
-    logger.warning(f"{result_df.head()=}")
+@render.data_frame
+def add_to_results(result_df=result_df, res_dict=res_dict):
+    if not result_df:
+        results_dict["good_answer"] = input.select()
+        result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
+    else:
+        res_dict["good_answer"] = input.select()
+        new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
+        result_df = new_results
+        logger.warning(f"{result_df.head()=}")
     return result_df
