@@ -1,0 +1,13 @@
+name: irish_statutes
+channels:
+  - defaults
+dependencies:
+  - scrapy
+  - python=3.12
+  - anaconda::beautifulsoup4
+  - scikit-learn
+  - pandas
+  - ipython
+  - scalene
+  - psycopg2
+prefix: /opt/homebrew/anaconda3/envs/irish_statutes
