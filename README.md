@@ -28,7 +28,7 @@ and sets it running with a datadirectory of `pgdata` wherever you ran this comma
 Most of the important code is in the `indexer` subdirectory. 
 
 If you just want to test out the approach, then you can get pretty far
-by firstly running `law_index.py` (follow the help instructions
+by firstly running `law_index.py` (follow the help instructions)
 to load all the data into a PG database.
 
 You can then run `law_query.py` with a query argument, which
