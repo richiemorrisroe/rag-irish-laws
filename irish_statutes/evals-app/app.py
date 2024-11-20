@@ -79,14 +79,14 @@ result_df = None
 res_dict = None
 
 
-@render.data_frame
-def add_to_results(result_df=result_df, res_dict=res_dict):
-    if not result_df:
-        results_dict["good_answer"] = input.select()
-        result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
-    else:
-        res_dict["good_answer"] = input.select()
-        new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
-        result_df = new_results
-        logger.warning(f"{result_df.head()=}")
-    return result_df
+# @render.data_frame
+# def add_to_results(result_df=result_df, res_dict=res_dict):
+#     if not result_df:
+#         results_dict["good_answer"] = input.select()
+#         result_df = pd.DataFrame.from_dict(results_dict, orient='columns')
+#     else:
+#         res_dict["good_answer"] = input.select()
+#         new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
+#         result_df = new_results
+#         logger.warning(f"{result_df.head()=}")
+#     return result_df

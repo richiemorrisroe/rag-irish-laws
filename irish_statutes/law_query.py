@@ -23,9 +23,9 @@ from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.postprocessor import SimilarityPostprocessor
 
-from utils import setup_logger
-from eval_queries import query_llm, setup_llm
-from vstore import get_index_from_database
+from indexer.utils import setup_logger
+from indexer.eval_queries import query_llm, setup_llm
+from indexer.vstore import get_index_from_database
 
 parser = argparse.ArgumentParser()
 
