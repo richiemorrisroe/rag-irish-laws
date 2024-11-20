@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import os
 from typing import Any
 
 from llama_index.llms.ollama import Ollama
@@ -61,7 +62,10 @@ class QueryResponse():
 
 
 def setup_llm(temperature=0.5, timeout_secs=90):
-    llm = Ollama(model="llama3", temperature=temperature, request_timeout=timeout_secs)
+    ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
+
+    llm = Ollama(model="llama3", temperature=temperature, request_timeout=timeout_secs,
+                 base_url=ollama_host)
     return llm
 
 def setup_embedding():
