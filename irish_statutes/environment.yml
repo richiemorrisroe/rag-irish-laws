@@ -1,6 +1,7 @@
 name: irish_statutes
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - scrapy
   - python=3.12
@@ -8,6 +9,8 @@ dependencies:
   - scikit-learn
   - pandas
   - ipython
-  - scalene
   - psycopg2
+  - pip
+  - pip:
+    - -r requirements.txt
 prefix: /opt/homebrew/anaconda3/envs/irish_statutes
