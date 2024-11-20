@@ -8,6 +8,5 @@ dependencies:
   - scikit-learn
   - pandas
   - ipython
-  - scalene
   - psycopg2
 prefix: /opt/homebrew/anaconda3/envs/irish_statutes
