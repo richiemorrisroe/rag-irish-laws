@@ -23,10 +23,11 @@ services:
     volumes:
       - ollama:/root/.ollama
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:11434"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s  # Give more time for initial startup
 
   app:
     build: .
@@ -37,7 +38,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://postgres:pword@pgvector:5432/postgres
-      OLLAMA_HOST: http://ollama:11434  # Add this environment variable
+      OLLAMA_HOST: http://ollama:11434
     ports:
       - "8050:8050"
     volumes:
