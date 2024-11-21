@@ -29,4 +29,4 @@ RUN conda run -n irish_statutes pip install -e .
 EXPOSE 8050
 
 # The code to run when container is started:
-ENTRYPOINT [ "/bin/bash", "-c", "/app/pull_models.sh", "&&", "conda", "run", "-n", "irish_statutes", "python", "-m", "shiny", "run", "/app/evals-app/app.py", "--host", "0.0.0.0", "--port", "8050"]
+ENTRYPOINT ["/bin/bash", "-c", "/app/pull_models.sh && conda run -n irish_statutes python -m shiny run /app/evals-app/app.py --host 0.0.0.0 --port 8050"]
