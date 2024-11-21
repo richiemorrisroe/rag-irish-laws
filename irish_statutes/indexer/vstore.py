@@ -48,7 +48,8 @@ def get_index_from_database(table_name="irish_laws"):
     # Use the database name from the connection string instead of hardcoding
     url = make_url(connection_string)
     logger.warning(f"{url=}")
-    db_name = url.database or 'postgres'  # fallback to 'postgres' if not specified
+    db_name = 'vector_db'  
+    logger.warning(f"{url.database=}")
     logger.warning(f"{db_name=}")
     try:
         conn = psycopg2.connect(connection_string)

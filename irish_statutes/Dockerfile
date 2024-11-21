@@ -23,8 +23,8 @@ COPY . .
 # Install the local package in development mode
 RUN conda run -n irish_statutes pip install -e .
 
-# COPY pull_models.sh /app/
-# RUN chmod +x /app/pull_models.sh
+COPY pull_models.sh /app/
+RUN chmod +x /app/pull_models.sh
 # Expose the port that Shiny will run on
 EXPOSE 8050
 
