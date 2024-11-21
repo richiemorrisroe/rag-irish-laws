@@ -49,7 +49,7 @@ def get_index_from_database(table_name="irish_laws"):
     url = make_url(connection_string)
     logger.warning(f"{url=}")
     db_name = url.database or 'postgres'  # fallback to 'postgres' if not specified
-    logger.watning(f"{db_name=}")
+    logger.warning(f"{db_name=}")
     try:
         conn = psycopg2.connect(connection_string)
         conn.autocommit = True
