@@ -37,14 +37,19 @@ from sqlalchemy import make_url
 from llama_index.core import VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.vector_stores.postgres import PGVectorStore
 
+from indexer.utils import setup_logger
+
+logger = setup_logger(__file__)
+
 def get_index_from_database(table_name="irish_laws"):
     # Use pgvector service name instead of localhost in default
     connection_string = os.getenv('DATABASE_URL', 'postgresql://postgres:pword@pgvector:5432/postgres')
-    
+    logger.warning(f"{connection_string=}")
     # Use the database name from the connection string instead of hardcoding
     url = make_url(connection_string)
+    logger.warning(f"{url=}")
     db_name = url.database or 'postgres'  # fallback to 'postgres' if not specified
-    
+    logger.watning(f"{db_name=}")
     try:
         conn = psycopg2.connect(connection_string)
         conn.autocommit = True
