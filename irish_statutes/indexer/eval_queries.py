@@ -61,7 +61,7 @@ class QueryResponse():
         return str(self.response)
 
 
-def setup_llm(temperature=0.5, timeout_secs=90):
+def setup_llm(temperature=0.5, timeout_secs=300):
     ollama_host = os.getenv('OLLAMA_HOST', 'http://ollama:11434')
 
     llm = Ollama(model="llama3", temperature=temperature, request_timeout=timeout_secs,
