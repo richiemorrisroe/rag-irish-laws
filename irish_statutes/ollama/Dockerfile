@@ -6,8 +6,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy a script to pull and initialize the model
-COPY init-model.sh /init-model.sh
-RUN chmod +x /init-model.sh
+COPY init_model.sh /init_model.sh
+RUN chmod +x /init_model.sh
 
 # Use an entrypoint script to ensure the model is loaded
 COPY entrypoint.sh /entrypoint.sh
