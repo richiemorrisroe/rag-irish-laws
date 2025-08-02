@@ -8,10 +8,10 @@ import pandas as pd
 
 from llama_index.core import Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-# root_dir = Path(__file__).parent
-# print(root_dir)
-# sys.path.append(str(root_dir))
-
+root_dir = Path(__file__).parent.parent
+print(root_dir)
+sys.path.append(str(root_dir))
+print(f"{sys.path=}")
 from indexer.eval_queries import query_llm, setup_llm, QUERIES
 from indexer.vstore import get_index_from_database
 from indexer.utils import setup_logger
@@ -89,4 +89,7 @@ def add_to_results(result_df=result_df, res_dict=res_dict):
         new_results = pd.DataFrame.from_dict(res_dict, orient='columns')
         result_df = new_results
         logger.warning(f"{result_df.head()=}")
+        @reactive.event(input.query)
+        def reset_answer():
+            ui.update_radio_buttons("select", selected="NA")
     return result_df
