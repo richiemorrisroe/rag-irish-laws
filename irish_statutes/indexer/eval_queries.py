@@ -61,7 +61,7 @@ class QueryResponse():
 
 
 def setup_llm(temperature=0.5, timeout_secs=90):
-    llm = Ollama(model="llama3", temperature=temperature, request_timeout=timeout_secs)
+    llm = Ollama(model="gemma3:4b", temperature=temperature, request_timeout=timeout_secs)
     return llm
 
 def setup_embedding():
