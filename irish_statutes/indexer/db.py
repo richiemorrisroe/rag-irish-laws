@@ -70,6 +70,14 @@ def load_unrated() -> pd.DataFrame:
         )
 
 
+def parse_jsonb_list(val) -> list:
+    if not val:
+        return []
+    if isinstance(val, list):
+        return val
+    return json.loads(val)
+
+
 def query_exists(query_text: str) -> bool:
     with get_connection() as conn:
         with conn.cursor() as cur:

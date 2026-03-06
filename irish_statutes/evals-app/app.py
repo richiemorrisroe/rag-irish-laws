@@ -3,7 +3,6 @@ Irish Statutes Eval App — Shiny Core
 Run: uv run shiny run --reload irish_statutes/evals-app/app.py
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -16,6 +15,7 @@ from indexer.db import (
     create_eval_table,
     load_all_results,
     load_unrated,
+    parse_jsonb_list,
     save_eval_result,
     update_rating,
 )
@@ -174,16 +174,8 @@ def server(input, output, session):
         rid = int(row["id"])
         rating = str(row["rating"])
 
-        # Parse source nodes JSON
-        try:
-            nodes = json.loads(row["source_nodes"]) if row["source_nodes"] else []
-        except Exception:
-            nodes = []
-
-        try:
-            scores = json.loads(row["scores"]) if row["scores"] else []
-        except Exception:
-            scores = []
+        nodes = parse_jsonb_list(row["source_nodes"])
+        scores = parse_jsonb_list(row["scores"])
 
         scores_md = "\n".join(f"- {s:.4f}" for s in scores) if scores else "_None_"
         sources_md = "\n\n---\n\n".join(
