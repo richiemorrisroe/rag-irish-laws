@@ -6,6 +6,32 @@ from sqlalchemy import make_url
 from llama_index.core import VectorStoreIndex, StorageContext, load_index_from_storage
 from llama_index.vector_stores.postgres import PGVectorStore
 
+CONNECTION_STRING = "postgresql://postgres:pword@localhost:5432"
+DB_NAME = "vector_db"
+
+_HNSW_KWARGS = {
+    "hnsw_m": 16,
+    "hnsw_ef_construction": 64,
+    "hnsw_ef_search": 40,
+    "hnsw_dist_method": "vector_cosine_ops",
+}
+
+
+def get_vector_store(table_name: str = "irish_law_sections") -> PGVectorStore:
+    """Return a PGVectorStore for section-level embeddings."""
+    url = make_url(CONNECTION_STRING)
+    return PGVectorStore.from_params(
+        database=DB_NAME,
+        host=url.host,
+        password=url.password,
+        port=url.port,
+        user=url.username,
+        table_name=table_name,
+        embed_dim=768,
+        hnsw_kwargs=_HNSW_KWARGS,
+    )
+
+
 def get_index_from_database(table_name="irish_laws"):
     connection_string = "postgresql://postgres:pword@localhost:5432"
     db_name = "vector_db"
