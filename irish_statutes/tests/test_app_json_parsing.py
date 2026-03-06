@@ -1,67 +1,34 @@
 """
-Tests for JSONB parsing in the eval app.
+Tests for parse_jsonb_list in indexer.db.
 
-psycopg2 deserialises JSONB columns to Python objects automatically.
-The app must handle both already-deserialised lists (psycopg2) and
-JSON strings (fallback / SQLAlchemy text columns).
+psycopg2 deserialises JSONB columns to Python lists automatically.
+parse_jsonb_list must handle both already-deserialised lists (psycopg2)
+and JSON strings (SQLAlchemy / future use).
 """
 import json
-import pytest
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from indexer.db import parse_jsonb_list
 
 
-# ---------------------------------------------------------------------------
-# Replicate the exact logic currently in app.py answer_panel()
-# ---------------------------------------------------------------------------
-def parse_jsonb_current(val):
-    """Current (broken) implementation copied verbatim from app.py."""
-    try:
-        return json.loads(val) if val else []
-    except Exception:
-        return []
+def test_list_input_is_returned_unchanged():
+    """psycopg2 gives us a list; it must come back as-is."""
+    data = [{"text": "some law text", "score": 0.72, "metadata": {}}]
+    assert parse_jsonb_list(data) == data
 
 
-def parse_jsonb_fixed(val):
-    """Fixed implementation that handles pre-deserialised lists."""
-    if not val:
-        return []
-    if isinstance(val, list):
-        return val
-    return json.loads(val)
+def test_json_string_is_deserialised():
+    """A JSON string (e.g. from SQLAlchemy) must still work."""
+    data = [{"text": "foo", "score": 0.5, "metadata": {}}]
+    assert parse_jsonb_list(json.dumps(data)) == data
 
 
-# ---------------------------------------------------------------------------
-# Tests that should FAIL with the current code and PASS with the fix
-# ---------------------------------------------------------------------------
-class TestCurrentlyBroken:
-    def test_list_input_returns_empty_with_current_code(self):
-        """psycopg2 gives us a list; current code silently returns []."""
-        data = [{"text": "some law text", "score": 0.72, "metadata": {}}]
-        result = parse_jsonb_current(data)
-        # This WRONGLY returns [] because json.loads(list) raises TypeError
-        assert result == [], "current code returns [] for list input (the bug)"
-
-    def test_list_input_loses_data(self):
-        """Confirm the data is non-empty going in but empty coming out."""
-        data = [{"text": "foo"}, {"text": "bar"}]
-        result = parse_jsonb_current(data)
-        assert len(result) == 0  # data lost — this is the bug
+def test_none_returns_empty_list():
+    assert parse_jsonb_list(None) == []
 
 
-class TestFixed:
-    def test_list_passthrough(self):
-        """Fixed code returns the list unchanged."""
-        data = [{"text": "some law text", "score": 0.72, "metadata": {}}]
-        result = parse_jsonb_fixed(data)
-        assert result == data
-
-    def test_json_string_still_works(self):
-        """Fixed code still handles a JSON string (SQLAlchemy / future-proofing)."""
-        data = [{"text": "foo", "score": 0.5, "metadata": {}}]
-        result = parse_jsonb_fixed(json.dumps(data))
-        assert result == data
-
-    def test_none_returns_empty(self):
-        assert parse_jsonb_fixed(None) == []
-
-    def test_empty_list_returns_empty(self):
-        assert parse_jsonb_fixed([]) == []
+def test_empty_list_returns_empty_list():
+    assert parse_jsonb_list([]) == []
