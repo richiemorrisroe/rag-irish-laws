@@ -17,3 +17,8 @@ dependencies = [
     "shinyswatch>=0.8.0",
     "sqlalchemy>=2.0.37",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
