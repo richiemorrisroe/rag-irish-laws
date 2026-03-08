@@ -19,12 +19,8 @@ from indexer.db import (
     save_eval_result,
     update_rating,
 )
-from indexer.eval_queries import query_llm, setup_llm
+from indexer.eval_queries import query_agent
 from indexer.utils import setup_logger
-from indexer.vstore import get_index_from_database
-
-from llama_index.core import Settings
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 logger = setup_logger(__file__)
 
@@ -32,9 +28,6 @@ logger = setup_logger(__file__)
 # Bootstrap (runs once at startup)
 # ---------------------------------------------------------------------------
 create_eval_table()
-Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
-Settings.llm = setup_llm()
-index = get_index_from_database()
 
 # ---------------------------------------------------------------------------
 # UI
@@ -253,7 +246,7 @@ def server(input, output, session):
         q = input.custom_query().strip()
         if not q:
             return
-        result = query_llm(index, q, top_k=5, logger=logger)
+        result = query_agent(q)
         rid = save_eval_result(
             query=q,
             response=result.response,

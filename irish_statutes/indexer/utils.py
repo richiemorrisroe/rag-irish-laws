@@ -14,6 +14,13 @@ def setup_logger(caller_file=None):
     logging.basicConfig(filename=logfile_name,
                         encoding='utf-8', level=logging.DEBUG)
 
+    # Silence verbose third-party loggers that chatter at DEBUG level.
+    # In particular, the Anthropic SDK calls model_dump(by_alias=None) in its
+    # debug-logging path which crashes with Pydantic v2 (TypeError: 'NoneType'
+    # cannot be converted to 'PyBool').
+    for _noisy_lib in ("anthropic", "httpcore", "httpx"):
+        logging.getLogger(_noisy_lib).setLevel(logging.WARNING)
+
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.WARNING)
     formatter = logging.Formatter(

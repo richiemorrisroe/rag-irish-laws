@@ -69,6 +69,16 @@ def setup_embedding():
     return embedding
 
 
+def query_agent(query: str, top_k: int = None) -> "QueryResponse":
+    """Thin wrapper over the Claude agentic loop.
+
+    top_k is accepted for API compatibility but ignored — the agent
+    determines coverage by how many tool calls it makes.
+    """
+    from .claude_agent import run_agent
+    return run_agent(query)
+
+
 def query_llm(index, query, top_k=2, logger=None):
     if not logger:
         logger = setup_logger("__FILE__")
