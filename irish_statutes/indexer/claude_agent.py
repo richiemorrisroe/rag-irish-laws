@@ -229,6 +229,8 @@ def run_agent(query: str) -> QueryResponse:
         # the SDK triggers a by_alias=None Pydantic serialization bug.
         content_dicts = []
         for block in response.content:
+            if block.type == "text" and block.text.strip():
+                print(f"\n[thinking] {block.text.strip()}")
             if block.type == "text":
                 content_dicts.append({"type": "text", "text": block.text})
             elif block.type == "tool_use":
@@ -240,7 +242,13 @@ def run_agent(query: str) -> QueryResponse:
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
+                print(f"\n[tool_call] {block.name}({json.dumps(block.input)})")
                 result_str = dispatch_tool(block.name, block.input)
+                try:
+                    parsed = json.loads(result_str)
+                    print(f"[tool_result] {json.dumps(parsed, indent=2, default=str)}")
+                except (json.JSONDecodeError, TypeError):
+                    print(f"[tool_result] {result_str}")
                 tool_results.append(
                     {
                         "type": "tool_result",
