@@ -14,6 +14,7 @@ dependencies = [
     "pandas>=2.2.3",
     "psycopg2>=2.9.10",
     "pytest-cov>=7.0.0",
+    "pytest-profiling>=1.8.1",
     "shiny>=1.2.1",
     "shinyswatch>=0.8.0",
     "sqlalchemy>=2.0.37",
