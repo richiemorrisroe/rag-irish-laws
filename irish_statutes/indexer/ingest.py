@@ -56,8 +56,9 @@ def ingest_file(html_path: str, law_name: str = "", url: str = "", embed: bool =
         url=url or None,
         html_path=html_path,
     )
-
+    print(law_id)
     sections = flatten(root)
+    print(f"{len(sections)=}")
     insert_sections(law_id, sections)
 
     if embed and sections:
@@ -68,9 +69,14 @@ def ingest_file(html_path: str, law_name: str = "", url: str = "", embed: bool =
 
 def _embed_sections(law_id: int, law_name: str, year: int, sections: list[dict]) -> None:
     """Embed section-level documents into PGVectorStore."""
-    from llama_index.core import VectorStoreIndex, StorageContext
+    from llama_index.core import VectorStoreIndex, StorageContext, Settings
     from llama_index.core.schema import Document
+    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+    from llama_index.llms.ollama import Ollama
     from indexer.vstore import get_vector_store
+
+    Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
+    Settings.llm = Ollama(model="llama3", request_timeout=180.0)
 
     embeddable_types = {"section", "subsection"}
     docs = []

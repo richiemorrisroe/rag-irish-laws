@@ -41,21 +41,45 @@ requires_db = pytest.mark.skipif(not _db_available(), reason="Postgres not reach
 @pytest.fixture(scope="module")
 def ingested_laws():
     """
-    Ingest ACT_11 and ACT_46 without vector embedding; yield the law_ids;
-    delete the inserted rows after the module finishes.
+    Ingest ACT_11 and ACT_46 without vector embedding; yield the law_ids.
+
+    Only deletes rows that did not already exist before the fixture ran,
+    so re-running tests after a full ingest does not wipe production data.
     """
     from indexer.ingest import ingest_file
     from indexer.db import get_connection
+
+    def _existing_id(conn, year, act_number):
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM laws WHERE year = %s AND act_number = %s",
+                (year, act_number),
+            )
+            row = cur.fetchone()
+            return row[0] if row else None
+
+    with get_connection() as conn:
+        pre_11 = _existing_id(conn, 2004, 11)
+        pre_46 = _existing_id(conn, 2013, 46)
 
     law_id_11 = ingest_file(str(ACT_11), embed=False)
     law_id_46 = ingest_file(str(ACT_46), embed=False)
 
     yield {"act_11": law_id_11, "act_46": law_id_46}
 
-    # Cleanup — law_sections cascade-deleted via FK
-    with get_connection() as conn:
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM laws WHERE id IN (%s, %s)", (law_id_11, law_id_46))
+    # Only clean up rows that the fixture itself created
+    to_delete = []
+    if pre_11 is None:
+        to_delete.append(law_id_11)
+    if pre_46 is None:
+        to_delete.append(law_id_46)
+
+    if to_delete:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "DELETE FROM laws WHERE id = ANY(%s)", (to_delete,)
+                )
 
 
 # ---------------------------------------------------------------------------

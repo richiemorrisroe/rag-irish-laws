@@ -114,13 +114,14 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     """
     soup = BeautifulSoup(html, "lxml")
     tables = soup.find_all("table")
+    # breakpoint()
     if not tables:
         # Fallback: grab all body text
         return StatuteNode("act", "", law_name, soup.get_text(separator="\n", strip=True))
 
     main_table = tables[0]
     rows = main_table.find_all("tr")
-
+    # extract_act_title(rows)
     # Extract act title from the HTML (all-caps line containing "ACT", before "BE IT ENACTED")
     if not law_name:
         for row in rows:
@@ -135,7 +136,7 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
                 break
 
     root = StatuteNode("act", "", law_name, "")
-
+    # create_stack_and_position_counters(root) -> (stack, position_counters)
     # Stack tracks current nesting:  list of (node, depth_rank)
     # depth_rank:  act=0, part/schedule=1, section=2, subsection=3, paragraph=4, subparagraph=5
     RANKS = {"act": 0, "part": 1, "schedule": 1, "chapter": 1, "section": 2,
@@ -161,7 +162,7 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     current_section: Optional[StatuteNode] = None  # track for section_ref like "7(2)"
 
     past_enactment = False  # skip table-of-contents rows before "BE IT ENACTED"
-
+    #also extract_act_title, for some reason???
     for row in rows:
         cells = row.find_all("td")
         if len(cells) < 3:

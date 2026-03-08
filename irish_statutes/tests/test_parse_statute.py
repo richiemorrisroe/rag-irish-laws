@@ -100,7 +100,8 @@ def test_col2_format_detects_sections():
     assert "2" in sec_refs
     assert "3" in sec_refs
 
-
+## this is weird, the act_11 gives us Article 2(3) etc, while act_46 is 2(3) etc
+## these shouldn't really be different
 def test_col2_format_compound_subsection_refs():
     sections = flatten(parse_html(_read(ACT_46)))
     refs = {s["section_ref"] for s in sections if s["section_type"] == "subsection"}
