@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+
 
 
 # ---------------------------------------------------------------------------

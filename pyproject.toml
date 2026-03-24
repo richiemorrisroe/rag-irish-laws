@@ -33,3 +33,4 @@ markers = [
     "integration: tests that require external services (DB, API key)",
     "requires_api_key: tests that require ANTHROPIC_API_KEY to be set",
 ]
+pythonpath = ["irish_statutes"]
