@@ -191,14 +191,16 @@ def get_section_by_ref(law_id: int, section_ref: str) -> dict | None:
             return dict(zip(cols, row))
 
 
-def search_laws(query: str) -> list[dict]:
+def search_laws(query: str, limit=None) -> list[dict]:
     if query == "":
         return []
+    if not limit:
+        limit = 20
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM laws WHERE name ILIKE %s ORDER BY year, act_number",
-                (f"%{query}%",)
+                "SELECT * FROM laws WHERE name ILIKE %s ORDER BY year, act_number LIMIT %s",
+                (f"%{query}%",limit,)
             )
             cols = [d[0] for d in cur.description]
             return [dict(zip(cols, row)) for row in cur.fetchall()]

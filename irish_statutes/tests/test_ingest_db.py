@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from indexer.db import search_laws, get_law_by_name
+
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
 ACT_11 = RAW_HTML / "2004" / "act_11.html"   # Air Navigation Act 2004
@@ -193,22 +194,25 @@ def test_search_laws_finds_by_partial_name(ingested_laws):
 
 @requires_db
 def test_search_laws_empty_query_returns_no_results(ingested_laws):
-    from indexer.db import search_laws
+
     # Empty-ish wildcard — should return all laws
     results = search_laws("")
     assert len(results) == 0
 
+@requires_db
+def test_search_laws_has_a_limit_parameter():
+    results = search_laws("planning", limit=2)
+    assert len(results) == 2
+
 
 @requires_db
 def test_search_laws_no_match_returns_empty(ingested_laws):
-    from indexer.db import search_laws
     results = search_laws("xyzzy_nonexistent_act")
     assert results == []
 
 
 @requires_db
 def test_get_law_by_name_with_year_filter(ingested_laws):
-    from indexer.db import get_law_by_name
     # Correct year
     assert get_law_by_name("Companies", year=2013) is not None
     # Wrong year should not match
