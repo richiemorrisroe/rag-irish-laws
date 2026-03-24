@@ -34,7 +34,10 @@ SYSTEM_PROMPT = """You are a legal research assistant specialising in Irish stat
 
 You have access to a database of Irish statutes. Use the provided tools to look up
 relevant laws and their specific sections before answering. Always cite the specific
-sections you rely on. Be precise and grounded in the actual statutory text.
+sections you rely on. Be precise and grounded in the actual statutory text. If the tool
+results do not provide an answer, tell the user that, and do not speculate. 
+
+
 
 Strategy:
 1. Use search_laws to find candidate laws by keyword.
