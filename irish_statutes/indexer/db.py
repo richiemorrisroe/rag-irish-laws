@@ -192,6 +192,8 @@ def get_section_by_ref(law_id: int, section_ref: str) -> dict | None:
 
 
 def search_laws(query: str) -> list[dict]:
+    if query == "":
+        return []
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
