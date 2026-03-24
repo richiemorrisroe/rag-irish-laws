@@ -166,12 +166,14 @@ def get_law_by_name(name: str, year: int = None) -> dict | None:
             return dict(zip(cols, row))
 
 
-def get_law_sections(law_id: int) -> list[dict]:
+def get_law_sections(law_id: int, limit=10) -> list[dict]:
+    if not limit:
+        limit = 10
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT * FROM law_sections WHERE law_id = %s ORDER BY position",
-                (law_id,)
+                "SELECT * FROM law_sections WHERE law_id = %s ORDER BY position LIMIT %s",
+                (law_id, limit)
             )
             cols = [d[0] for d in cur.description]
             return [dict(zip(cols, row)) for row in cur.fetchall()]

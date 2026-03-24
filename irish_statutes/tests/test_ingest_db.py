@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from indexer.db import search_laws, get_law_by_name
-
+from indexer.ingest import ingest_file
+from indexer.db import search_laws, get_law_by_name, get_law_sections, get_connection, get_section_by_ref
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
 ACT_11 = RAW_HTML / "2004" / "act_11.html"   # Air Navigation Act 2004
@@ -47,8 +47,7 @@ def ingested_laws():
     Only deletes rows that did not already exist before the fixture ran,
     so re-running tests after a full ingest does not wipe production data.
     """
-    from indexer.ingest import ingest_file
-    from indexer.db import get_connection
+
 
     def _existing_id(conn, year, act_number):
         with conn.cursor() as cur:
@@ -89,7 +88,7 @@ def ingested_laws():
 
 @requires_db
 def test_ingest_creates_law_row_act11(ingested_laws):
-    from indexer.db import get_law_by_name
+
     law = get_law_by_name("Air Navigation", year=2004)
     assert law is not None
     assert law["year"] == 2004
@@ -99,7 +98,6 @@ def test_ingest_creates_law_row_act11(ingested_laws):
 
 @requires_db
 def test_ingest_creates_law_row_act46(ingested_laws):
-    from indexer.db import get_law_by_name
     law = get_law_by_name("Companies (Miscellaneous", year=2013)
     assert law is not None
     assert law["year"] == 2013
@@ -108,7 +106,6 @@ def test_ingest_creates_law_row_act46(ingested_laws):
 
 @requires_db
 def test_ingest_html_path_stored(ingested_laws):
-    from indexer.db import get_law_by_name
     law = get_law_by_name("Air Navigation", year=2004)
     assert law["html_path"] is not None
     assert "act_11.html" in law["html_path"]
@@ -117,17 +114,27 @@ def test_ingest_html_path_stored(ingested_laws):
 # ---------------------------------------------------------------------------
 # law_sections table — row counts and types
 # ---------------------------------------------------------------------------
+@requires_db
+def test_ingest_get_law_sections_only_ten_sections_if_not_specified(ingested_laws):
+    sections = get_law_sections(ingested_laws["act_11"])
+    assert len(sections) == 10
+
+
+@requires_db
+def test_ingest_get_law_sections_set_limit_can_override_default(ingested_laws):
+    sections = get_law_sections(ingested_laws["act_11"], limit = 50)
+    assert len(sections) == 50
+
+
 
 @requires_db
 def test_ingest_creates_sections(ingested_laws):
-    from indexer.db import get_law_sections
     sections = get_law_sections(ingested_laws["act_11"])
-    assert len(sections) > 50, f"Expected many sections, got {len(sections)}"
+    assert len(sections) == 10
 
 
 @requires_db
 def test_ingest_sections_have_expected_types(ingested_laws):
-    from indexer.db import get_law_sections
     sections = get_law_sections(ingested_laws["act_11"])
     types = {s["section_type"] for s in sections}
     assert "part" in types
@@ -138,8 +145,7 @@ def test_ingest_sections_have_expected_types(ingested_laws):
 @requires_db
 def test_ingest_sections_idempotent(ingested_laws):
     """Re-ingesting the same act should not duplicate rows."""
-    from indexer.db import get_law_sections
-    from indexer.ingest import ingest_file
+
 
     before = len(get_law_sections(ingested_laws["act_11"]))
     ingest_file(str(ACT_11), embed=False)
@@ -154,7 +160,7 @@ def test_ingest_sections_idempotent(ingested_laws):
 @requires_db
 def test_get_section_by_ref_col1_format(ingested_laws):
     """Section 7(2) of the Air Navigation Act should be retrievable by ref."""
-    from indexer.db import get_section_by_ref
+
     law_id = ingested_laws["act_11"]
     sec = get_section_by_ref(law_id, "7(2)")
     assert sec is not None, "Section 7(2) not found"
@@ -165,7 +171,6 @@ def test_get_section_by_ref_col1_format(ingested_laws):
 @requires_db
 def test_get_section_by_ref_col2_format(ingested_laws):
     """Section 2(8) of the Companies Act should be retrievable by ref."""
-    from indexer.db import get_section_by_ref
     law_id = ingested_laws["act_46"]
     sec = get_section_by_ref(law_id, "2(8)")
     assert sec is not None, "Section 2(8) not found"
@@ -175,7 +180,6 @@ def test_get_section_by_ref_col2_format(ingested_laws):
 
 @requires_db
 def test_get_section_by_ref_missing_returns_none(ingested_laws):
-    from indexer.db import get_section_by_ref
     result = get_section_by_ref(ingested_laws["act_11"], "999(99)")
     assert result is None
 
@@ -186,7 +190,6 @@ def test_get_section_by_ref_missing_returns_none(ingested_laws):
 
 @requires_db
 def test_search_laws_finds_by_partial_name(ingested_laws):
-    from indexer.db import search_laws
     results = search_laws("Air Navigation")
     names = [r["name"] for r in results]
     assert any("Air Navigation" in n for n in names)
@@ -194,8 +197,6 @@ def test_search_laws_finds_by_partial_name(ingested_laws):
 
 @requires_db
 def test_search_laws_empty_query_returns_no_results(ingested_laws):
-
-    # Empty-ish wildcard — should return all laws
     results = search_laws("")
     assert len(results) == 0
 
@@ -225,7 +226,6 @@ def test_get_law_by_name_with_year_filter(ingested_laws):
 
 @requires_db
 def test_sections_have_increasing_positions(ingested_laws):
-    from indexer.db import get_law_sections
     sections = get_law_sections(ingested_laws["act_46"])
     positions = [s["position"] for s in sections]
     # Not necessarily strictly increasing globally (position resets per-parent),
