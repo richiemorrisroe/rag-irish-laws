@@ -15,11 +15,19 @@ from __future__ import annotations
 
 import argparse
 import os
+import pprint
 import re
 import sys
 
+from llama_index.core import VectorStoreIndex, StorageContext, Settings
+from llama_index.core.schema import Document
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.ollama import Ollama
+
+
 from indexer.db import upsert_law, insert_sections
 from indexer.parse_statute import parse_html, flatten
+from indexer.vstore import get_vector_store
 
 RAW_HTML_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "raw_html")
 
@@ -69,11 +77,7 @@ def ingest_file(html_path: str, law_name: str = "", url: str = "", embed: bool =
 
 def _embed_sections(law_id: int, law_name: str, year: int, sections: list[dict]) -> None:
     """Embed section-level documents into PGVectorStore."""
-    from llama_index.core import VectorStoreIndex, StorageContext, Settings
-    from llama_index.core.schema import Document
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-    from llama_index.llms.ollama import Ollama
-    from indexer.vstore import get_vector_store
+    
 
     Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
     Settings.llm = Ollama(model="llama3", request_timeout=180.0)
@@ -100,13 +104,17 @@ def _embed_sections(law_id: int, law_name: str, year: int, sections: list[dict])
             },
         )
         docs.append(doc)
-
+    print(f"{docs=}")
     if not docs:
-        return
+        docs = []
+        return docs
 
     vector_store = get_vector_store()
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    VectorStoreIndex.from_documents(docs, storage_context=storage_context, show_progress=False)
+    print(f"{storage_context=}")
+    stored_vectors = VectorStoreIndex.from_documents(docs, storage_context=storage_context, show_progress=False)
+    pprint.pprint(f"{stored_vectors=}")
+    return docs
 
 
 def ingest_all(raw_html_dir: str = RAW_HTML_DIR, embed: bool = True) -> None:
