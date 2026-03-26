@@ -9,8 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from indexer.ingest import ingest_file
+from indexer.ingest import ingest_file, _embed_sections
 from indexer.db import search_laws, get_law_by_name, get_law_sections, get_connection, get_section_by_ref
+
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
 ACT_11 = RAW_HTML / "2004" / "act_11.html"   # Air Navigation Act 2004
@@ -231,3 +232,10 @@ def test_sections_have_increasing_positions(ingested_laws):
     # Not necessarily strictly increasing globally (position resets per-parent),
     # but every position should be a positive integer
     assert all(isinstance(p, int) and p >= 1 for p in positions)
+
+
+@requires_db
+def test_embed_sections_works(ingested_laws):
+    sections = get_law_sections(ingested_laws["act_46"])
+    res = _embed_sections(1, law_name = "Companies (Misc Provisions) Act 2013", year=2013, sections=sections)
+    assert res is  None
