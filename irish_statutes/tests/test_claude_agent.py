@@ -15,13 +15,12 @@ import httpx
 import pytest
 
 
-
-
 # ---------------------------------------------------------------------------
 # Step 1 — Module importable
 # ---------------------------------------------------------------------------
 def test_claude_agent_importable():
     from indexer.claude_agent import run_agent
+
     assert callable(run_agent)
 
 
@@ -30,6 +29,7 @@ def test_claude_agent_importable():
 # ---------------------------------------------------------------------------
 def test_tool_schemas_have_required_keys():
     from indexer.claude_agent import TOOL_SCHEMAS
+
     assert len(TOOL_SCHEMAS) > 0
     for schema in TOOL_SCHEMAS:
         assert "name" in schema, f"Schema missing 'name': {schema}"
@@ -79,6 +79,7 @@ def test_run_agent_two_iterations():
         MockClient.return_value.messages.create = mock_create
         with patch("indexer.claude_agent.dispatch_tool", return_value=tool_result):
             from indexer.claude_agent import run_agent
+
             result = run_agent("What is the minimum wage?")
 
     assert mock_create.call_count == 2
@@ -109,16 +110,18 @@ def test_run_agent_survives_debug_logging():
     """
     import anthropic as anthropic_sdk
 
-    fake_body = json.dumps({
-        "id": "msg_test",
-        "type": "message",
-        "role": "assistant",
-        "content": [{"type": "text", "text": "The minimum wage is €13.50."}],
-        "model": "claude-haiku-4-5-20251001",
-        "stop_reason": "end_turn",
-        "stop_sequence": None,
-        "usage": {"input_tokens": 10, "output_tokens": 5},
-    }).encode()
+    fake_body = json.dumps(
+        {
+            "id": "msg_test",
+            "type": "message",
+            "role": "assistant",
+            "content": [{"type": "text", "text": "The minimum wage is €13.50."}],
+            "model": "claude-haiku-4-5-20251001",
+            "stop_reason": "end_turn",
+            "stop_sequence": None,
+            "usage": {"input_tokens": 10, "output_tokens": 5},
+        }
+    ).encode()
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
@@ -135,8 +138,11 @@ def test_run_agent_survives_debug_logging():
     root.setLevel(logging.DEBUG)  # Reproduces what setup_logger does
 
     try:
-        with patch("indexer.claude_agent.anthropic.Anthropic", return_value=real_client):
+        with patch(
+            "indexer.claude_agent.anthropic.Anthropic", return_value=real_client
+        ):
             from indexer.claude_agent import run_agent
+
             result = run_agent("What is the minimum wage?")
         assert "13.50" in result.response
     finally:
@@ -149,6 +155,7 @@ def test_run_agent_survives_debug_logging():
 @pytest.mark.integration
 def test_dispatch_search_laws_returns_json():
     from indexer.claude_agent import dispatch_tool
+
     result = dispatch_tool("search_laws", {"query": "data protection"})
     parsed = json.loads(result)
     assert isinstance(parsed, list)
@@ -162,6 +169,7 @@ def test_dispatch_search_laws_returns_json():
 def test_run_agent_returns_query_response():
     from indexer.claude_agent import run_agent
     from indexer.eval_queries import QueryResponse
+
     result = run_agent("What is the minimum wage?")
     assert isinstance(result, QueryResponse)
     assert len(result.response) > 0
@@ -176,6 +184,7 @@ def test_run_agent_makes_tool_calls():
     TypeError before we ever get a result.
     """
     from indexer.claude_agent import run_agent
+
     result = run_agent("What is the minimum wage?")
     assert len(result.source_nodes) > 0, (
         "Agent returned no source nodes — it never made a tool call, "
@@ -190,6 +199,7 @@ def test_run_agent_makes_tool_calls():
 @pytest.mark.requires_api_key
 def test_source_nodes_compatible_with_save_eval_result():
     from indexer.claude_agent import run_agent
+
     result = run_agent("What is the minimum wage?")
     for node in result.source_nodes:
         assert hasattr(node, "text"), "SourceNode missing .text"

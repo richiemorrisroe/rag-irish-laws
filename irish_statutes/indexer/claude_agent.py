@@ -238,7 +238,12 @@ def run_agent(query: str) -> QueryResponse:
                 content_dicts.append({"type": "text", "text": block.text})
             elif block.type == "tool_use":
                 content_dicts.append(
-                    {"type": "tool_use", "id": block.id, "name": block.name, "input": block.input}
+                    {
+                        "type": "tool_use",
+                        "id": block.id,
+                        "name": block.name,
+                        "input": block.input,
+                    }
                 )
         messages.append({"role": "assistant", "content": content_dicts})
 

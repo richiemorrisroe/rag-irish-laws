@@ -6,13 +6,12 @@ import sys
 
 def setup_logger(caller_file=None):
     if not caller_file:
-        logfile_name = f'{__file__}.log'
+        logfile_name = f"{__file__}.log"
     else:
-        filtered_caller_file = re.sub(r'\.py$', "", caller_file)
-        logfile_name = f'{filtered_caller_file}.log'
+        filtered_caller_file = re.sub(r"\.py$", "", caller_file)
+        logfile_name = f"{filtered_caller_file}.log"
     logger = logging.getLogger()
-    logging.basicConfig(filename=logfile_name,
-                        encoding='utf-8', level=logging.DEBUG)
+    logging.basicConfig(filename=logfile_name, encoding="utf-8", level=logging.DEBUG)
 
     # Silence verbose third-party loggers that chatter at DEBUG level.
     # In particular, the Anthropic SDK calls model_dump(by_alias=None) in its
@@ -24,7 +23,8 @@ def setup_logger(caller_file=None):
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.WARNING)
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
@@ -32,7 +32,7 @@ def setup_logger(caller_file=None):
 
 def display_prompt_dict(prompts_dict):
     for k, p in prompts_dict.items():
-        text_md = f"**Prompt Key**: {k}<br>" f"**Text:** <br>"
+        text_md = f"**Prompt Key**: {k}<br>**Text:** <br>"
         pprint(text_md)
         print(p.get_template())
         # display(Markdown("<br><br>"))

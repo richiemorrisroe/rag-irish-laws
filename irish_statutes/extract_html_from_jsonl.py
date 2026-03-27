@@ -4,6 +4,7 @@ One-time script to backfill raw_html/ from existing laws.jsonl without re-scrapi
 Usage:
     uv run python extract_html_from_jsonl.py [--jsonl laws.jsonl] [--out-dir raw_html]
 """
+
 import argparse
 import json
 import os

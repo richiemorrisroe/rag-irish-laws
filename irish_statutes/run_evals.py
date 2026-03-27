@@ -1,4 +1,3 @@
-
 from dataclasses import asdict
 import pickle
 from llama_index.core import Settings
@@ -18,7 +17,7 @@ for query in QUERIES:
         print(f"{top_k=}")
         response = query_llm(index, query, top_k=top_k)
         results[query] = asdict(response)
-    total_cnt+= 1
-    print(f'{total_cnt=}')
-with open('query_eval_top_k_2_10.pkl', 'wb') as f:
+    total_cnt += 1
+    print(f"{total_cnt=}")
+with open("query_eval_top_k_2_10.pkl", "wb") as f:
     pickle.dump(results, f)

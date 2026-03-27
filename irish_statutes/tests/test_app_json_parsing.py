@@ -5,6 +5,7 @@ psycopg2 deserialises JSONB columns to Python lists automatically.
 parse_jsonb_list must handle both already-deserialised lists (psycopg2)
 and JSON strings (SQLAlchemy / future use).
 """
+
 import json
 import sys
 from pathlib import Path

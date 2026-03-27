@@ -68,6 +68,7 @@ app_ui = ui.page_navbar(
     theme=theme.morph,
 )
 
+
 # ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
@@ -162,7 +163,10 @@ def server(input, output, session):
     def answer_panel():
         row = current_row()
         if row is None:
-            return ui.p("Select a query from the sidebar or run a custom query.", class_="text-muted")
+            return ui.p(
+                "Select a query from the sidebar or run a custom query.",
+                class_="text-muted",
+            )
 
         rid = int(row["id"])
         rating = str(row["rating"])

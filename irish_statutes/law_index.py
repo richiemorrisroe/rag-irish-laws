@@ -6,8 +6,13 @@ import os
 import sys
 from multiprocessing import Pool
 
-from llama_index.core import (SimpleDirectoryReader, VectorStoreIndex, Settings, StorageContext,
-                              load_index_from_storage)
+from llama_index.core import (
+    SimpleDirectoryReader,
+    VectorStoreIndex,
+    Settings,
+    StorageContext,
+    load_index_from_storage,
+)
 from llama_index.readers.file import FlatReader
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
@@ -23,7 +28,7 @@ from utils import setup_logger
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--data_dir", default='./csv_laws')
+parser.add_argument("--data_dir", default="./csv_laws")
 
 parser.add_argument("--storage-format", choices=["postgres", "file"])
 
@@ -31,13 +36,12 @@ args = parser.parse_args()
 
 print(args)
 
-DATA_DIR = './csv_laws'
+DATA_DIR = "./csv_laws"
 
 parser = HTMLNodeParser()  # optional list of tags
 
 
-if args.storage_format == 'postgres':
-
+if args.storage_format == "postgres":
     connection_string = "postgresql://postgres:pword@localhost:5432"
     db_name = "vector_db"
     conn = psycopg2.connect(connection_string)
@@ -57,7 +61,6 @@ Settings.llm = Ollama(model="llama3", request_timeout=180.0)
 logger.warning("set up Ollama")
 
 
-
 def multiprocessing_indexing(input_dir, num_processes=6):
     all_batches, total_count = batch_files(input_dir, 10)
     with Pool(processes=num_processes) as pool:
@@ -65,11 +68,13 @@ def multiprocessing_indexing(input_dir, num_processes=6):
 
 
 def get_files_from_directory(directory):
-    res = glob.glob(directory + '/*')
+    res = glob.glob(directory + "/*")
     return res
+
 
 parser = FlatReader()
 file_extractor = {".txt": parser}
+
 
 def indexing(input_files, file_extractor=file_extractor):
     documents = SimpleDirectoryReader(
@@ -83,7 +88,7 @@ def indexing(input_files, file_extractor=file_extractor):
 
 def batch_files(directory, batch_size=None, included_exts=None):
     if included_exts is None:
-        included_exts = ['.txt']
+        included_exts = [".txt"]
     if batch_size is None:
         batch_size = 10
 
@@ -94,7 +99,7 @@ def batch_files(directory, batch_size=None, included_exts=None):
                 all_files.append(os.path.join(root, file))
 
     batches = [
-        all_files[i: i + batch_size] for i in range(0, len(all_files), batch_size)
+        all_files[i : i + batch_size] for i in range(0, len(all_files), batch_size)
     ]
 
     return batches, len(all_files)
@@ -105,7 +110,7 @@ files = get_files_from_directory(DATA_DIR)
 all_batches, total_count = batch_files(DATA_DIR, 10)
 logger.warning(f"{total_count=}")
 
-if args.storage_format=='postgres':
+if args.storage_format == "postgres":
     url = make_url(connection_string)
     vector_store = PGVectorStore.from_params(
         database=db_name,
@@ -124,21 +129,21 @@ if args.storage_format=='postgres':
     )
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     documents = indexing(files, file_extractor)
-    index = VectorStoreIndex.from_documents(documents,
-                                            storage_context=storage_context,
-                                            show_progress=True)
+    index = VectorStoreIndex.from_documents(
+        documents, storage_context=storage_context, show_progress=True
+    )
     index.storage_context.persist()
 
 
 PERSIST_DIR = "./full_storage"
 if not os.path.exists(PERSIST_DIR):
     logger.warning("got to reading files")
-    
+
     # documents = SimpleDirectoryReader(
     #     DATA_DIR, file_extractor=file_extractor
     # ).load_data()
     documents = indexing(files, file_extractor)
-    
+
     # store it for later
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:

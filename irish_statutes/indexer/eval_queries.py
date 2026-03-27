@@ -8,52 +8,54 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 from .utils import setup_logger
 
-QUERIES = ["""What are the requirements for data protection under the 2018 act?""",
-           """What is the procedure for firing an employee in Irish law?""",
-           """what are the functions of a data protection officer?""",
-           """what information must motor insurance providers supply to policyholders?""",
-           """What constitutes a breach of equality law?""",
-           """How many breaks are employees entitled to during an eight hour shift?""",
-           """What are the legal requirements for an employment contract?""",
-           """What constitutes unfair dismissal under irish law?""",
-           """What grounds does the Equality act cover?""",
-           """Is it legal to import gasoline for personal use?""",
-           """What requirements must be met to transport gasoline?""",
-           """Under what grounds may a residential tenancy be terminated?""",
-           """May a joint residential tenancy be terminated if one of
+QUERIES = [
+    """What are the requirements for data protection under the 2018 act?""",
+    """What is the procedure for firing an employee in Irish law?""",
+    """what are the functions of a data protection officer?""",
+    """what information must motor insurance providers supply to policyholders?""",
+    """What constitutes a breach of equality law?""",
+    """How many breaks are employees entitled to during an eight hour shift?""",
+    """What are the legal requirements for an employment contract?""",
+    """What constitutes unfair dismissal under irish law?""",
+    """What grounds does the Equality act cover?""",
+    """Is it legal to import gasoline for personal use?""",
+    """What requirements must be met to transport gasoline?""",
+    """Under what grounds may a residential tenancy be terminated?""",
+    """May a joint residential tenancy be terminated if one of
            the parties leaves the property?""",
-           """What are the conditions required for irish citizenship?""",
-           """What are the conditions required for a
+    """What are the conditions required for irish citizenship?""",
+    """What are the conditions required for a
            claim of contructive dismissal to succeed?""",
-           """How is land ownership determined?""",
-           """What happens if someone dies without making a will?""",
-           """What is intestate succession in the context of inheritance?""",
-           """What is intestate succession?""",
-           """What is the minimum wage for full time employees?""",
-           """What is the national minimum hourly rate of pay?""",
-           """Is it legal to drive without insurance?"""
-           """What are the penalities for driving without insurance?""",
-           """Can i be prosecuted for allowing my friend to drive a vehicle
+    """How is land ownership determined?""",
+    """What happens if someone dies without making a will?""",
+    """What is intestate succession in the context of inheritance?""",
+    """What is intestate succession?""",
+    """What is the minimum wage for full time employees?""",
+    """What is the national minimum hourly rate of pay?""",
+    """Is it legal to drive without insurance?"""
+    """What are the penalities for driving without insurance?""",
+    """Can i be prosecuted for allowing my friend to drive a vehicle
            on which they are not insured?""",
-           """What are the requirements for setting up a limited
+    """What are the requirements for setting up a limited
            company in Ireland?""",
-           """What are the differences between a private limited company
+    """What are the differences between a private limited company
            and a private unlimited company?""",
-           """Does a private limited company need to file accounts,
+    """Does a private limited company need to file accounts,
            and if so, how often?""",
-           """Are individuals required to have health insurance?""",
-           """Under what conditions can adults in Ireland be charged different
+    """Are individuals required to have health insurance?""",
+    """Under what conditions can adults in Ireland be charged different
            prices for health insurance?"""
-           """What are special categories of personal data?""",
-           """What is the purpose of data protection law?"""
-           ]
+    """What are special categories of personal data?""",
+    """What is the purpose of data protection law?""",
+]
+
 
 @dataclass
-class QueryResponse():
+class QueryResponse:
     query: str
     response: str
     top_k: int
-    scores :list[float]
+    scores: list[float]
     source_nodes: Any
 
     def __repr__(self):
@@ -61,8 +63,11 @@ class QueryResponse():
 
 
 def setup_llm(temperature=0.5, timeout_secs=90):
-    llm = Ollama(model="gemma3:4b", temperature=temperature, request_timeout=timeout_secs)
+    llm = Ollama(
+        model="gemma3:4b", temperature=temperature, request_timeout=timeout_secs
+    )
     return llm
+
 
 def setup_embedding():
     embedding = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
@@ -76,6 +81,7 @@ def query_agent(query: str, top_k: int = None) -> "QueryResponse":
     determines coverage by how many tool calls it makes.
     """
     from .claude_agent import run_agent
+
     return run_agent(query)
 
 
@@ -88,8 +94,10 @@ def query_llm(index, query, top_k=2, logger=None):
     scores = [x.score for x in response.source_nodes]
     source_nodes = response.source_nodes
     logger.info(f"{len(source_nodes)=}")
-    return QueryResponse(query=query,
-                         response=response.response,
-                         top_k=top_k,
-                         scores=scores,
-                         source_nodes=source_nodes)
+    return QueryResponse(
+        query=query,
+        response=response.response,
+        top_k=top_k,
+        scores=scores,
+        source_nodes=source_nodes,
+    )

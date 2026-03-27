@@ -12,7 +12,9 @@ class IrishStatutesPipeline:
 class HtmlFilePipeline:
     """Persist raw HTML for each scraped act to raw_html/{year}/act_{number}.html."""
 
-    BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "irish_statutes", "raw_html")
+    BASE_DIR = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "irish_statutes", "raw_html"
+    )
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)

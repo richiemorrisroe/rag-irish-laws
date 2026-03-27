@@ -4,29 +4,39 @@ Tests for indexer.ingest and indexer.db — end-to-end ingest into Postgres.
 These tests require a running Postgres instance (docker-compose in the project).
 If the DB is not reachable they are skipped automatically.
 """
+
 import sys
 from pathlib import Path
 
 import pytest
 
 from indexer.ingest import ingest_file, _embed_sections
-from indexer.db import search_laws, get_law_by_name, get_law_sections, get_connection, get_section_by_ref
+from indexer.db import (
+    search_laws,
+    get_law_by_name,
+    get_law_sections,
+    get_connection,
+    get_section_by_ref,
+)
 
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
-ACT_11 = RAW_HTML / "2004" / "act_11.html"   # Air Navigation Act 2004
-ACT_46 = RAW_HTML / "2013" / "act_46.html"   # Companies (Misc Provisions) Act 2013
+ACT_11 = RAW_HTML / "2004" / "act_11.html"  # Air Navigation Act 2004
+ACT_46 = RAW_HTML / "2013" / "act_46.html"  # Companies (Misc Provisions) Act 2013
 
 
 # ---------------------------------------------------------------------------
 # DB availability fixture — skip entire module if Postgres is unreachable
 # ---------------------------------------------------------------------------
 
+
 def _db_available() -> bool:
     try:
         import psycopg2
-        conn = psycopg2.connect("postgresql://postgres:pword@localhost:5432/vector_db",
-                                connect_timeout=3)
+
+        conn = psycopg2.connect(
+            "postgresql://postgres:pword@localhost:5432/vector_db", connect_timeout=3
+        )
         conn.close()
         return True
     except Exception:
@@ -40,6 +50,7 @@ requires_db = pytest.mark.skipif(not _db_available(), reason="Postgres not reach
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module")
 def ingested_laws():
     """
@@ -48,7 +59,6 @@ def ingested_laws():
     Only deletes rows that did not already exist before the fixture ran,
     so re-running tests after a full ingest does not wipe production data.
     """
-
 
     def _existing_id(conn, year, act_number):
         with conn.cursor() as cur:
@@ -78,14 +88,13 @@ def ingested_laws():
     if to_delete:
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    "DELETE FROM laws WHERE id = ANY(%s)", (to_delete,)
-                )
+                cur.execute("DELETE FROM laws WHERE id = ANY(%s)", (to_delete,))
 
 
 # ---------------------------------------------------------------------------
 # laws table
 # ---------------------------------------------------------------------------
+
 
 @requires_db
 def test_ingest_creates_law_row_act11(ingested_laws):
@@ -123,9 +132,8 @@ def test_ingest_get_law_sections_only_ten_sections_if_not_specified(ingested_law
 
 @requires_db
 def test_ingest_get_law_sections_set_limit_can_override_default(ingested_laws):
-    sections = get_law_sections(ingested_laws["act_11"], limit = 50)
+    sections = get_law_sections(ingested_laws["act_11"], limit=50)
     assert len(sections) == 50
-
 
 
 @requires_db
@@ -138,6 +146,7 @@ def test_ingest_creates_sections(ingested_laws):
 def test_ingest_sections_have_expected_types(ingested_laws):
     sections = get_law_sections(ingested_laws["act_11"])
     types = {s["section_type"] for s in sections}
+    print(f"{types=}")
     assert "part" in types
     assert "section" in types
     assert "subsection" in types
@@ -146,7 +155,6 @@ def test_ingest_sections_have_expected_types(ingested_laws):
 @requires_db
 def test_ingest_sections_idempotent(ingested_laws):
     """Re-ingesting the same act should not duplicate rows."""
-
 
     before = len(get_law_sections(ingested_laws["act_11"]))
     ingest_file(str(ACT_11), embed=False)
@@ -157,6 +165,7 @@ def test_ingest_sections_idempotent(ingested_laws):
 # ---------------------------------------------------------------------------
 # Section-level lookups
 # ---------------------------------------------------------------------------
+
 
 @requires_db
 def test_get_section_by_ref_col1_format(ingested_laws):
@@ -189,6 +198,7 @@ def test_get_section_by_ref_missing_returns_none(ingested_laws):
 # Search and name lookup
 # ---------------------------------------------------------------------------
 
+
 @requires_db
 def test_search_laws_finds_by_partial_name(ingested_laws):
     results = search_laws("Air Navigation")
@@ -200,6 +210,7 @@ def test_search_laws_finds_by_partial_name(ingested_laws):
 def test_search_laws_empty_query_returns_no_results(ingested_laws):
     results = search_laws("")
     assert len(results) == 0
+
 
 @requires_db
 def test_search_laws_has_a_limit_parameter():
@@ -225,6 +236,7 @@ def test_get_law_by_name_with_year_filter(ingested_laws):
 # Positions are ordered
 # ---------------------------------------------------------------------------
 
+
 @requires_db
 def test_sections_have_increasing_positions(ingested_laws):
     sections = get_law_sections(ingested_laws["act_46"])
@@ -237,5 +249,7 @@ def test_sections_have_increasing_positions(ingested_laws):
 @requires_db
 def test_embed_sections_works(ingested_laws):
     sections = get_law_sections(ingested_laws["act_46"])
-    res = _embed_sections(1, law_name = "Companies (Misc Provisions) Act 2013", year=2013, sections=sections)
-    assert res is  None
+    res = _embed_sections(
+        1, law_name="Companies (Misc Provisions) Act 2013", year=2013, sections=sections
+    )
+    assert res is not None

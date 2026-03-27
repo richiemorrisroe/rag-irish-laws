@@ -12,6 +12,7 @@ HTML structure (table-based, 3-column rows):
   ''      ''               '(i) the amount specified...' ← sub-paragraph
   ''      ''               'regular continuation text'   ← body text appended to current node
 """
+
 from __future__ import annotations
 
 import re
@@ -24,15 +25,25 @@ from bs4 import BeautifulSoup
 # Data model
 # ---------------------------------------------------------------------------
 
-SECTION_TYPES = ("act", "part", "section", "subsection", "paragraph", "subparagraph", "schedule", "chapter", "article")
+SECTION_TYPES = (
+    "act",
+    "part",
+    "section",
+    "subsection",
+    "paragraph",
+    "subparagraph",
+    "schedule",
+    "chapter",
+    "article",
+)
 
 
 @dataclass
 class StatuteNode:
-    section_type: str       # one of SECTION_TYPES
-    section_ref: str        # e.g. '7', '7(2)', 'I', 'Schedule 1'
-    section_title: str      # e.g. 'Short title.'
-    text_content: str       # full text of this node (may be multi-line)
+    section_type: str  # one of SECTION_TYPES
+    section_ref: str  # e.g. '7', '7(2)', 'I', 'Schedule 1'
+    section_title: str  # e.g. 'Short title.'
+    text_content: str  # full text of this node (may be multi-line)
     children: list[StatuteNode] = field(default_factory=list)
     position: int = 0
 
@@ -41,13 +52,13 @@ class StatuteNode:
 # Regex helpers
 # ---------------------------------------------------------------------------
 
-RE_PART      = re.compile(r"^PART\s+(\w+)(.*)", re.DOTALL)
-RE_SCHEDULE  = re.compile(r"^SCHEDULE\s+(\w+)(.*)", re.DOTALL)
-RE_CHAPTER   = re.compile(r"^CHAPTER\s+(\w+)(.*)", re.DOTALL)
-RE_ARTICLE   = re.compile(r"^Article\s+(\d+)(.*)", re.DOTALL)
-RE_SECTION   = re.compile(r"^(\d+)\s*[.—–]\s*(.*)", re.DOTALL)
+RE_PART = re.compile(r"^PART\s+(\w+)(.*)", re.DOTALL)
+RE_SCHEDULE = re.compile(r"^SCHEDULE\s+(\w+)(.*)", re.DOTALL)
+RE_CHAPTER = re.compile(r"^CHAPTER\s+(\w+)(.*)", re.DOTALL)
+RE_ARTICLE = re.compile(r"^Article\s+(\d+)(.*)", re.DOTALL)
+RE_SECTION = re.compile(r"^(\d+)\s*[.—–]\s*(.*)", re.DOTALL)
 RE_SUBSECTION = re.compile(r"^\((\d+)\)\s*(.*)", re.DOTALL)
-RE_PARAGRAPH  = re.compile(r"^\(([a-z]{1,3})\)\s*(.*)", re.DOTALL)
+RE_PARAGRAPH = re.compile(r"^\(([a-z]{1,3})\)\s*(.*)", re.DOTALL)
 RE_SUBPARAGRAPH = re.compile(r"^\(([ivxlcdm]+)\)\s*(.*)", re.DOTALL)
 
 
@@ -108,6 +119,7 @@ def _classify_row(c2: str, c1: str = "") -> Optional[tuple[str, str, str]]:
 # Main parser
 # ---------------------------------------------------------------------------
 
+
 def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     """
     Parse statute HTML and return a StatuteNode tree rooted at the act level.
@@ -117,7 +129,9 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     # breakpoint()
     if not tables:
         # Fallback: grab all body text
-        return StatuteNode("act", "", law_name, soup.get_text(separator="\n", strip=True))
+        return StatuteNode(
+            "act", "", law_name, soup.get_text(separator="\n", strip=True)
+        )
 
     main_table = tables[0]
     rows = main_table.find_all("tr")
@@ -139,8 +153,17 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     # create_stack_and_position_counters(root) -> (stack, position_counters)
     # Stack tracks current nesting:  list of (node, depth_rank)
     # depth_rank:  act=0, part/schedule=1, section=2, subsection=3, paragraph=4, subparagraph=5
-    RANKS = {"act": 0, "part": 1, "schedule": 1, "chapter": 1, "section": 2,
-              "article": 2, "subsection": 3, "paragraph": 4, "subparagraph": 5}
+    RANKS = {
+        "act": 0,
+        "part": 1,
+        "schedule": 1,
+        "chapter": 1,
+        "section": 2,
+        "article": 2,
+        "subsection": 3,
+        "paragraph": 4,
+        "subparagraph": 5,
+    }
 
     stack: list[StatuteNode] = [root]
     position_counters: dict[int, int] = {0: 0}  # rank → counter
@@ -162,7 +185,7 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     current_section: Optional[StatuteNode] = None  # track for section_ref like "7(2)"
 
     past_enactment = False  # skip table-of-contents rows before "BE IT ENACTED"
-    #also extract_act_title, for some reason???
+    # also extract_act_title, for some reason???
     for row in rows:
         cells = row.find_all("td")
         if len(cells) < 3:
@@ -211,7 +234,9 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
                 if stype in ("part", "schedule"):
                     current_section = None  # reset section tracking across parts
                 elif stype == "article":
-                    current_section = node  # track article as parent for subsection refs
+                    current_section = (
+                        node  # track article as parent for subsection refs
+                    )
 
         else:
             # Plain continuation text — append to the most recent node on stack
@@ -229,6 +254,7 @@ def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
 # Flatten tree to list of dicts for DB insertion
 # ---------------------------------------------------------------------------
 
+
 def flatten(root: StatuteNode) -> list[dict]:
     """
     Depth-first walk of the tree; returns list of dicts matching law_sections schema.
@@ -237,14 +263,16 @@ def flatten(root: StatuteNode) -> list[dict]:
     results: list[dict] = []
 
     def walk(node: StatuteNode, parent_ref: Optional[str]):
-        results.append({
-            "section_type":  node.section_type,
-            "section_ref":   node.section_ref,
-            "section_title": node.section_title,
-            "text_content":  node.text_content,
-            "position":      node.position,
-            "parent_ref":    parent_ref,
-        })
+        results.append(
+            {
+                "section_type": node.section_type,
+                "section_ref": node.section_ref,
+                "section_title": node.section_title,
+                "text_content": node.text_content,
+                "position": node.position,
+                "parent_ref": parent_ref,
+            }
+        )
         for child in node.children:
             walk(child, node.section_ref)
 
@@ -257,6 +285,7 @@ def flatten(root: StatuteNode) -> list[dict]:
 # Debug helper
 # ---------------------------------------------------------------------------
 
+
 def debug_structure(html_path: str, max_nodes: int = 80) -> None:
     """Print the detected section tree of an act HTML file."""
     with open(html_path, encoding="utf-8") as f:
@@ -268,14 +297,24 @@ def debug_structure(html_path: str, max_nodes: int = 80) -> None:
     print(f"Act: {root.section_ref!r} — {root.section_title!r}")
     print(f"Total nodes: {len(rows)}\n")
 
-    indent_map = {"part": 0, "schedule": 0, "chapter": 1, "section": 1,
-                  "article": 1, "subsection": 2, "paragraph": 3, "subparagraph": 4}
+    indent_map = {
+        "part": 0,
+        "schedule": 0,
+        "chapter": 1,
+        "section": 1,
+        "article": 1,
+        "subsection": 2,
+        "paragraph": 3,
+        "subparagraph": 4,
+    }
 
     for r in rows[:max_nodes]:
         indent = "  " * indent_map.get(r["section_type"], 0)
         title = f" — {r['section_title']}" if r["section_title"] else ""
         text_preview = (r["text_content"] or "")[:60].replace("\n", " ")
-        print(f"{indent}[{r['section_type']}] {r['section_ref']}{title}  |  {text_preview!r}")
+        print(
+            f"{indent}[{r['section_type']}] {r['section_ref']}{title}  |  {text_preview!r}"
+        )
 
     if len(rows) > max_nodes:
         print(f"  ... ({len(rows) - max_nodes} more nodes)")

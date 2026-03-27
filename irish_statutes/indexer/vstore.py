@@ -59,13 +59,13 @@ def get_index_from_database(table_name="irish_laws"):
 
 
 def get_index_from_filesystem(data_dir, storage_format):
-    if data_dir and storage_format == 'filetype':
+    if data_dir and storage_format == "filetype":
         PERSIST_DIR = "./full_storage"
     else:
         PERSIST_DIR = data_dir
-    if not os.path.exists(PERSIST_DIR) and storage_format == 'filetype':
+    if not os.path.exists(PERSIST_DIR) and storage_format == "filetype":
         raise ValueError("please index some files first")
-    elif storage_format == 'filetype':
+    elif storage_format == "filetype":
         # load the existing index
         storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
         index = load_index_from_storage(storage_context)

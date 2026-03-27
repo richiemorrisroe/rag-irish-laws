@@ -11,6 +11,7 @@ Usage:
     # Ingest all acts but skip vector indexing
     uv run python -m indexer.ingest --no-vectors
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,7 +30,9 @@ from indexer.db import upsert_law, insert_sections
 from indexer.parse_statute import parse_html, flatten
 from indexer.vstore import get_vector_store
 
-RAW_HTML_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "raw_html")
+RAW_HTML_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "raw_html"
+)
 
 
 def _year_and_number_from_path(html_path: str) -> tuple[int, int] | None:
@@ -40,7 +43,9 @@ def _year_and_number_from_path(html_path: str) -> tuple[int, int] | None:
     return None
 
 
-def ingest_file(html_path: str, law_name: str = "", url: str = "", embed: bool = True) -> int:
+def ingest_file(
+    html_path: str, law_name: str = "", url: str = "", embed: bool = True
+) -> int:
     """
     Parse one HTML file, insert into DB, optionally embed sections.
     Returns the law_id.
@@ -75,9 +80,10 @@ def ingest_file(html_path: str, law_name: str = "", url: str = "", embed: bool =
     return law_id
 
 
-def _embed_sections(law_id: int, law_name: str, year: int, sections: list[dict]) -> None:
+def _embed_sections(
+    law_id: int, law_name: str, year: int, sections: list[dict]
+) -> None:
     """Embed section-level documents into PGVectorStore."""
-    
 
     Settings.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
     Settings.llm = Ollama(model="llama3", request_timeout=180.0)
@@ -112,7 +118,9 @@ def _embed_sections(law_id: int, law_name: str, year: int, sections: list[dict])
     vector_store = get_vector_store()
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     print(f"{storage_context=}")
-    stored_vectors = VectorStoreIndex.from_documents(docs, storage_context=storage_context, show_progress=False)
+    stored_vectors = VectorStoreIndex.from_documents(
+        docs, storage_context=storage_context, show_progress=False
+    )
     pprint.pprint(f"{stored_vectors=}")
     return docs
 
@@ -145,7 +153,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", help="Ingest a single HTML file")
     parser.add_argument("--raw-html-dir", default=RAW_HTML_DIR)
-    parser.add_argument("--no-vectors", action="store_true", help="Skip vector embedding")
+    parser.add_argument(
+        "--no-vectors", action="store_true", help="Skip vector embedding"
+    )
     args = parser.parse_args()
 
     embed = not args.no_vectors

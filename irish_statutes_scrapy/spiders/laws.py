@@ -15,26 +15,31 @@ class LawsSpider(scrapy.Spider):
         MAX_YEAR = dt.datetime.now().year
         # MAX_YEAR = 2001
         BASE_ACT_URL = "https://www.irishstatutebook.ie/eli/{year}/act/"
-        urls = [BASE_ACT_URL.format(year=year)
-                for year in range(MIN_YEAR, MAX_YEAR)]
+        urls = [BASE_ACT_URL.format(year=year) for year in range(MIN_YEAR, MAX_YEAR)]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         year = response.url.split("/")[-3]
-        public_acts = response.css('#public-acts')
-        links, names = public_acts.css(
-            'a::attr(href)').getall(), public_acts.css('a::text').getall()
-        links_html = [x for x in links if x.endswith('.html')]
+        public_acts = response.css("#public-acts")
+        links, names = (
+            public_acts.css("a::attr(href)").getall(),
+            public_acts.css("a::text").getall(),
+        )
+        links_html = [x for x in links if x.endswith(".html")]
 
         for name, link in zip(names, links_html):
             transformed_url = self.transform_url(link, year)
             if transformed_url:
-                yield scrapy.Request(transformed_url, callback=self.parse_act, meta={'name': name, 'year': year})
+                yield scrapy.Request(
+                    transformed_url,
+                    callback=self.parse_act,
+                    meta={"name": name, "year": year},
+                )
 
     def transform_url(self, original_url, year):
         # Extract the act number from the original URL
-        match = re.search(r'/(\d+)/index\.html$', original_url)
+        match = re.search(r"/(\d+)/index\.html$", original_url)
         if match:
             act_number = match.group(1)
             self.log(f"{act_number=}")
@@ -47,17 +52,17 @@ class LawsSpider(scrapy.Spider):
         return None
 
     def parse_act(self, response):
-        name = response.meta['name']
-        year = response.meta['year']
+        name = response.meta["name"]
+        year = response.meta["year"]
 
         # Extract the full text of the act
-        plain_text = response.css('body::text').extract_first()
-        full_text = response.css('body').extract_first()
+        plain_text = response.css("body::text").extract_first()
+        full_text = response.css("body").extract_first()
 
         yield {
-            'name': name,
-            'year': year,
-            'url': response.url,
-            'full_text': full_text,
-            'plain_text': plain_text
+            "name": name,
+            "year": year,
+            "url": response.url,
+            "full_text": full_text,
+            "plain_text": plain_text,
         }

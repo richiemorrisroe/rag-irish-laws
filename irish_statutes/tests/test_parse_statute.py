@@ -2,6 +2,7 @@
 Tests for indexer.parse_statute — HTML parsing, title extraction, structure detection.
 No database required.
 """
+
 import sys
 from pathlib import Path
 
@@ -16,8 +17,8 @@ RAW_HTML = Path(__file__).parent.parent / "raw_html"
 # Two sample acts that exercise different HTML formats:
 #   act_11.html  — col[1]-title format (section title in col[1], text in col[2])
 #   act_46.html  — all-in-col[2] format (everything in col[2])
-ACT_11 = RAW_HTML / "2004" / "act_11.html"   # Air Navigation Act 2004
-ACT_46 = RAW_HTML / "2013" / "act_46.html"   # Companies (Misc Provisions) Act 2013
+ACT_11 = RAW_HTML / "2004" / "act_11.html"  # Air Navigation Act 2004
+ACT_46 = RAW_HTML / "2013" / "act_46.html"  # Companies (Misc Provisions) Act 2013
 
 
 def _read(path: Path) -> str:
@@ -27,6 +28,7 @@ def _read(path: Path) -> str:
 # ---------------------------------------------------------------------------
 # Title extraction
 # ---------------------------------------------------------------------------
+
 
 def test_parse_extracts_title_col1_format():
     root = parse_html(_read(ACT_11))
@@ -49,6 +51,7 @@ def test_explicit_law_name_overrides_html_title():
 # Table-of-contents deduplication (BE IT ENACTED filter)
 # ---------------------------------------------------------------------------
 
+
 def test_no_duplicate_parts_col1_format():
     """TOC rows before 'BE IT ENACTED' must not produce duplicate part nodes."""
     root = parse_html(_read(ACT_11))
@@ -61,6 +64,7 @@ def test_no_duplicate_parts_col1_format():
 # ---------------------------------------------------------------------------
 # col[1]-title format (Act 11 / 2004)
 # ---------------------------------------------------------------------------
+
 
 def test_col1_format_has_parts():
     root = parse_html(_read(ACT_11))
@@ -79,7 +83,9 @@ def test_col1_format_section_has_title():
 def test_col1_format_compound_subsection_refs():
     sections = flatten(parse_html(_read(ACT_11)))
     refs = {s["section_ref"] for s in sections if s["section_type"] == "subsection"}
-    assert "7(2)" in refs, f"Expected '7(2)' in subsection refs, got sample: {list(refs)[:10]}"
+    assert "7(2)" in refs, (
+        f"Expected '7(2)' in subsection refs, got sample: {list(refs)[:10]}"
+    )
     assert "3(2)" in refs
 
 
@@ -93,6 +99,7 @@ def test_col1_format_subsection_text():
 # col[2]-only format (Act 46 / 2013)
 # ---------------------------------------------------------------------------
 
+
 def test_col2_format_detects_sections():
     sections = flatten(parse_html(_read(ACT_46)))
     sec_refs = {s["section_ref"] for s in sections if s["section_type"] == "section"}
@@ -100,20 +107,26 @@ def test_col2_format_detects_sections():
     assert "2" in sec_refs
     assert "3" in sec_refs
 
+
 ## this is weird, the act_11 gives us Article 2(3) etc, while act_46 is 2(3) etc
 ## these shouldn't really be different
 def test_col2_format_compound_subsection_refs():
     sections = flatten(parse_html(_read(ACT_46)))
     refs = {s["section_ref"] for s in sections if s["section_type"] == "subsection"}
     # Section 2's subsections should have compound refs like "2(8)", "2(9)"
-    assert any(r.startswith("2(") for r in refs), f"No '2(...)' refs found. Sample: {list(refs)[:10]}"
+    assert any(r.startswith("2(") for r in refs), (
+        f"No '2(...)' refs found. Sample: {list(refs)[:10]}"
+    )
 
 
 def test_col2_format_no_bare_subsection_refs():
     """After the fix, subsections must not appear as bare '(8)' — they need a section prefix."""
     sections = flatten(parse_html(_read(ACT_46)))
-    bare = [s["section_ref"] for s in sections
-            if s["section_type"] == "subsection" and s["section_ref"].startswith("(")]
+    bare = [
+        s["section_ref"]
+        for s in sections
+        if s["section_type"] == "subsection" and s["section_ref"].startswith("(")
+    ]
     assert bare == [], f"Found bare subsection refs: {bare}"
 
 
@@ -121,11 +134,19 @@ def test_col2_format_no_bare_subsection_refs():
 # flatten() structure
 # ---------------------------------------------------------------------------
 
+
 def test_flatten_returns_list_of_dicts():
     sections = flatten(parse_html(_read(ACT_11)))
     assert isinstance(sections, list)
     assert len(sections) > 0
-    expected_keys = {"section_type", "section_ref", "section_title", "text_content", "position", "parent_ref"}
+    expected_keys = {
+        "section_type",
+        "section_ref",
+        "section_title",
+        "text_content",
+        "position",
+        "parent_ref",
+    }
     assert expected_keys.issubset(sections[0].keys())
 
 
@@ -138,6 +159,7 @@ def test_flatten_position_is_positive_int():
 
 def test_flatten_section_types_are_valid():
     from indexer.parse_statute import SECTION_TYPES
+
     sections = flatten(parse_html(_read(ACT_11)))
     for s in sections:
         assert s["section_type"] in SECTION_TYPES, f"Unknown type: {s['section_type']}"
@@ -146,6 +168,7 @@ def test_flatten_section_types_are_valid():
 # ---------------------------------------------------------------------------
 # debug_structure helper
 # ---------------------------------------------------------------------------
+
 
 def test_debug_structure_runs_without_error(capsys):
     debug_structure(str(ACT_11), max_nodes=10)
@@ -156,6 +179,7 @@ def test_debug_structure_runs_without_error(capsys):
 # ---------------------------------------------------------------------------
 # raw_html directory (backfill verification)
 # ---------------------------------------------------------------------------
+
 
 def test_raw_html_year_dirs_exist():
     assert RAW_HTML.is_dir(), f"raw_html/ not found at {RAW_HTML}"
@@ -170,6 +194,7 @@ def test_raw_html_contains_html_files():
 
 def test_raw_html_filenames_match_pattern():
     import re
+
     html_files = list(RAW_HTML.rglob("act_*.html"))
     for f in html_files[:20]:  # spot-check first 20
         assert re.match(r"act_\d+\.html", f.name), f"Unexpected filename: {f.name}"

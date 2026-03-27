@@ -2,6 +2,7 @@ import argparse
 
 from transformers import AutoTokenizer
 
+
 def count_tokens(tokenizer, text):
     tokens = tokenizer.tokenize(text)
     num_tokens = len(tokens)
@@ -19,7 +20,7 @@ print(args)
 
 if args.file:
     print(args.file)
-    with open(args.file, 'r') as f:
+    with open(args.file, "r") as f:
         text = f.read()
 else:
     text = "Write your text here"
