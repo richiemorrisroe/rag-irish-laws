@@ -253,3 +253,7 @@ def test_embed_sections_works(ingested_laws):
         1, law_name="Companies (Misc Provisions) Act 2013", year=2013, sections=sections
     )
     assert res is not None
+
+def test_ingest_file_can_use_embeddings(ingested_laws):
+    res = ingest_file(str(ACT_46), embed=True)
+    assert res is not None
