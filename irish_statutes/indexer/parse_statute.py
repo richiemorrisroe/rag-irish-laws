@@ -46,6 +46,7 @@ class StatuteNode:
     text_content: str  # full text of this node (may be multi-line)
     children: list[StatuteNode] = field(default_factory=list)
     position: int = 0
+    document_position: int = 0
 
 
 # ---------------------------------------------------------------------------
