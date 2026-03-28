@@ -124,6 +124,7 @@ class StatuteParser:
     def __init__(self, path: Path):
         self.statute = None
         self.statute_path = path
+        self.statute_nodes = StatuteNode
         
 
 def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
