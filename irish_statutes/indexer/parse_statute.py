@@ -15,6 +15,7 @@ HTML structure (table-based, 3-column rows):
 
 from __future__ import annotations
 
+from pathlib import Path
 import re
 from dataclasses import dataclass, field
 from typing import Optional
@@ -119,7 +120,11 @@ def _classify_row(c2: str, c1: str = "") -> Optional[tuple[str, str, str]]:
 # ---------------------------------------------------------------------------
 # Main parser
 # ---------------------------------------------------------------------------
-
+class StatuteParser:
+    def __init__(self, path: Path):
+        self.statute = None
+        self.statute_path = path
+        
 
 def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
     """
