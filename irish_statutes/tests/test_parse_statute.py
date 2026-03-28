@@ -19,6 +19,8 @@ RAW_HTML = Path(__file__).parent.parent / "raw_html"
 #   act_46.html  — all-in-col[2] format (everything in col[2])
 ACT_11 = RAW_HTML / "2004" / "act_11.html"  # Air Navigation Act 2004
 ACT_46 = RAW_HTML / "2013" / "act_46.html"  # Companies (Misc Provisions) Act 2013
+ACT_38 = RAW_HTML / "2014" / "act_38.html"
+
 
 
 def _read(path: Path) -> str:
@@ -171,9 +173,14 @@ def test_flatten_section_types_are_valid():
 
 
 def test_debug_structure_runs_without_error(capsys):
-    debug_structure(str(ACT_11), max_nodes=10)
+    structure = debug_structure(str(ACT_11), max_nodes=10)
     captured = capsys.readouterr()
     assert "Total nodes:" in captured.out
+    assert len(structure) == 10
+
+def test_debug_structure_shows_all_nodes_when_passed_null_max_nodes(capsys):
+    structure = debug_structure(str(ACT_38), max_nodes=None)
+    assert len(structure) == 14528
 
 
 # ---------------------------------------------------------------------------

@@ -286,13 +286,15 @@ def flatten(root: StatuteNode) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def debug_structure(html_path: str, max_nodes: int = 80) -> None:
+def debug_structure(html_path: str, max_nodes: int = 80) -> list:
     """Print the detected section tree of an act HTML file."""
     with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     root = parse_html(html)
     rows = flatten(root)
+    if not max_nodes:
+        max_nodes = len(rows)
 
     print(f"Act: {root.section_ref!r} — {root.section_title!r}")
     print(f"Total nodes: {len(rows)}\n")
@@ -307,14 +309,20 @@ def debug_structure(html_path: str, max_nodes: int = 80) -> None:
         "paragraph": 3,
         "subparagraph": 4,
     }
-
+    debug_string_list = []
     for r in rows[:max_nodes]:
         indent = "  " * indent_map.get(r["section_type"], 0)
         title = f" — {r['section_title']}" if r["section_title"] else ""
         text_preview = (r["text_content"] or "")[:60].replace("\n", " ")
-        print(
-            f"{indent}[{r['section_type']}] {r['section_ref']}{title}  |  {text_preview!r}"
-        )
+        debug_string = f"""{indent}[{r['section_type']}] {r['section_ref']}{title}  |  {text_preview!r}"""
+        # print(
+        #     f"{indent}[{r['section_type']}] {r['section_ref']}{title}  |  {text_preview!r}"
+        # )
+        print(debug_string)
+        debug_string_list.append(debug_string)
+        
+
 
     if len(rows) > max_nodes:
         print(f"  ... ({len(rows) - max_nodes} more nodes)")
+    return debug_string_list
