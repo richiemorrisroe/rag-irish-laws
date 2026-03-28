@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from indexer.parse_statute import StatuteParser
+from indexer.parse_statute import StatuteNode, StatuteParser
 
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
@@ -14,3 +14,19 @@ def test_statute_parser_exists():
 def test_statute_parser_has_a_statute_node():    
     s = StatuteParser(path = ACT_38)
     assert s.statute_nodes is not None
+
+
+def test_statute_parser_can_read_file():
+    s = StatuteParser(path = ACT_38)
+    assert s.read() is not None
+
+def test_statute_parser_can_parse_html():
+    s = StatuteParser(path = ACT_38)
+    s.read()
+    assert s.parse() is not None
+
+def test_statute_parser_can_store_statute_node():
+    s = StatuteParser(path = ACT_38)
+    s.read()
+    s.parse()
+    assert isinstance(s.statute_nodes, StatuteNode)
