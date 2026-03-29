@@ -30,3 +30,9 @@ def test_statute_parser_can_store_statute_node():
     s.read()
     s.parse()
     assert isinstance(s.statute_nodes, StatuteNode)
+
+
+def test_statute_parser_can_get_ranks():
+    s = StatuteParser(path = ACT_38)
+    s.read()
+    assert isinstance(s.get_ranks(), dict)

@@ -139,6 +139,21 @@ class StatuteParser:
         self.statute_nodes = res
         return res
 
+    def get_ranks(self) -> dict:
+        RANKS = {
+            "act": 0,
+            "part": 1,
+            "schedule": 1,
+            "chapter": 1,
+            "section": 2,
+            "article": 2,
+            "subsection": 3,
+            "paragraph": 4,
+            "subparagraph": 5,
+        }
+        self.ranks = RANKS
+        return RANKS
+
     def parse_html(self, law_name: str = "", year: int = 0) -> StatuteNode:
         """
         Parse statute HTML and return a StatuteNode tree rooted at the act level.
