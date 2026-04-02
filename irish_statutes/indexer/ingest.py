@@ -27,7 +27,7 @@ from llama_index.llms.ollama import Ollama
 
 
 from indexer.db import upsert_law, insert_sections
-from indexer.parse_statute import parse_html, flatten
+from indexer.parse_statute import StatuteParser, flatten
 from indexer.vstore import get_vector_store
 
 RAW_HTML_DIR = os.path.join(
@@ -50,6 +50,7 @@ def ingest_file(
     Parse one HTML file, insert into DB, optionally embed sections.
     Returns the law_id.
     """
+    parser = StatuteParser()
     parsed = _year_and_number_from_path(html_path)
     if not parsed:
         raise ValueError(f"Cannot determine year/act_number from path: {html_path}")
@@ -57,8 +58,8 @@ def ingest_file(
 
     with open(html_path, encoding="utf-8") as f:
         html = f.read()
-
-    root = parse_html(html, law_name=law_name, year=year)
+    
+    root = parser.parse_html(html, law_name=law_name, year=year)
     if not law_name:
         law_name = root.section_title or f"Act {act_number} of {year}"
 

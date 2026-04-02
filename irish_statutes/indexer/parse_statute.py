@@ -187,17 +187,18 @@ class StatuteParser:
         # create_stack_and_position_counters(root) -> (stack, position_counters)
         # Stack tracks current nesting:  list of (node, depth_rank)
         # depth_rank:  act=0, part/schedule=1, section=2, subsection=3, paragraph=4, subparagraph=5
-        RANKS = {
-            "act": 0,
-            "part": 1,
-            "schedule": 1,
-            "chapter": 1,
-            "section": 2,
-            "article": 2,
-            "subsection": 3,
-            "paragraph": 4,
-            "subparagraph": 5,
-        }
+        RANKS = self.get_ranks()
+        # RANKS = {
+        #     "act": 0,
+        #     "part": 1,
+        #     "schedule": 1,
+        #     "chapter": 1,
+        #     "section": 2,
+        #     "article": 2,
+        #     "subsection": 3,
+        #     "paragraph": 4,
+        #     "subparagraph": 5,
+        # }
 
         stack: list[StatuteNode] = [root]
         position_counters: dict[int, int] = {0: 0}  # rank → counter
