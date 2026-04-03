@@ -207,10 +207,12 @@ class StatuteParser:
             # Pop stack until top has rank < new rank
             while len(stack) > 1 and RANKS.get(stack[-1].section_type, 0) >= rank:
                 stack.pop()
-                return stack[-1]
+            return stack[-1]
 
         def append_node(node: StatuteNode, rank: int):
+            print(f"{node=}")
             parent = current_parent_for(rank)
+            print(f"{parent=}")
             pos = position_counters.get(id(parent), 0) + 1
             position_counters[id(parent)] = pos
             node.position = pos
@@ -222,7 +224,9 @@ class StatuteParser:
         past_enactment = False  # skip table-of-contents rows before "BE IT ENACTED"
         # also extract_act_title, for some reason???
         for row in rows:
+            # print(f"{row=}")
             cells = row.find_all("td")
+            # print(f"{cells=}")
             if len(cells) < 3:
                 continue
 
@@ -237,14 +241,14 @@ class StatuteParser:
                 if "BE IT ENACTED" in c2.upper() or "HEREBY ENACTED" in c2.upper():
                     past_enactment = True
                     # Capture the act title from the "Number N of YEAR" line if seen before
-                    continue
+                continue
 
                     # Classify row — pass c1 so section detection knows whether a title is present
             classification = _classify_row(c2, c1)
-
+            print(f"{classification=}")
             if classification:
                 stype, ref, text = classification
-
+                print(f"{stype=}")
                 if stype == "section":
                     node = StatuteNode("section", ref, c1, text)
                     append_node(node, RANKS["section"])
@@ -281,8 +285,7 @@ class StatuteParser:
                             target.text_content += "\n" + c2
                         else:
                             target.text_content = c2
-
-            return root
+        return root
 
         
         

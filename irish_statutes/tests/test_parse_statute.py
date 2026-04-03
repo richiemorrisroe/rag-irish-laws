@@ -81,7 +81,6 @@ def test_col1_format_has_parts():
     sp.read()
     root = sp.parse_html()
     parts = [n for n in root.children if n.section_type == "part"]
-    breakpoint()
     assert len(parts) >= 3
 
 
