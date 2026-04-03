@@ -10,7 +10,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from indexer.parse_statute import StatuteParser, flatten, debug_structure
+from indexer.parse_statute import StatuteParser, flatten, debug_structure, SECTION_TYPES
 
 RAW_HTML = Path(__file__).parent.parent / "raw_html"
 
@@ -86,7 +86,8 @@ def test_col1_format_has_parts():
 
 def test_col1_format_section_has_title():
     sp = StatuteParser(path=ACT_11)
-    root = sp.parse_html(_read(ACT_11))
+    sp.read()
+    root = sp.parse_html()
     sections = flatten(root)
     sec7 = next((s for s in sections if s["section_ref"] == "7"), None)
     assert sec7 is not None, "Section 7 not found"
@@ -94,8 +95,9 @@ def test_col1_format_section_has_title():
 
 
 def test_col1_format_compound_subsection_refs():
-    sp = StatuteParser()
-    sections = flatten(sp.parse_html(_read(ACT_11)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html())
     refs = {s["section_ref"] for s in sections if s["section_type"] == "subsection"}
     assert "7(2)" in refs, (
         f"Expected '7(2)' in subsection refs, got sample: {list(refs)[:10]}"
@@ -104,8 +106,9 @@ def test_col1_format_compound_subsection_refs():
 
 
 def test_col1_format_subsection_text():
-    sp = StatuteParser()
-    sections = flatten(sp.parse_html(_read(ACT_11)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html())
     s72 = next(s for s in sections if s["section_ref"] == "7(2)")
     assert "subsection" in s72["text_content"].lower() or len(s72["text_content"]) > 20
 
@@ -116,9 +119,11 @@ def test_col1_format_subsection_text():
 
 
 def test_col2_format_detects_sections():
-    sp = StatuteParser()
-    sections = flatten(sp.parse_html(_read(ACT_46)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html())
     sec_refs = {s["section_ref"] for s in sections if s["section_type"] == "section"}
+    print(f"{sec_refs=}")
     assert "1" in sec_refs
     assert "2" in sec_refs
     assert "3" in sec_refs
@@ -127,7 +132,9 @@ def test_col2_format_detects_sections():
 ## this is weird, the act_11 gives us Article 2(3) etc, while act_46 is 2(3) etc
 ## these shouldn't really be different
 def test_col2_format_compound_subsection_refs():
-    sections = flatten(parse_html(_read(ACT_46)))
+    sp = StatuteParser(path=ACT_46)
+    sp.read()
+    sections = flatten(sp.parse_html())
     refs = {s["section_ref"] for s in sections if s["section_type"] == "subsection"}
     # Section 2's subsections should have compound refs like "2(8)", "2(9)"
     assert any(r.startswith("2(") for r in refs), (
@@ -137,7 +144,9 @@ def test_col2_format_compound_subsection_refs():
 
 def test_col2_format_no_bare_subsection_refs():
     """After the fix, subsections must not appear as bare '(8)' — they need a section prefix."""
-    sections = flatten(parse_html(_read(ACT_46)))
+    sp = StatuteParser(path=ACT_46)
+    sp.read()
+    sections = flatten(sp.parse_html())
     bare = [
         s["section_ref"]
         for s in sections
@@ -152,7 +161,9 @@ def test_col2_format_no_bare_subsection_refs():
 
 
 def test_flatten_returns_list_of_dicts():
-    sections = flatten(parse_html(_read(ACT_11)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html())
     assert isinstance(sections, list)
     assert len(sections) > 0
     expected_keys = {
@@ -167,16 +178,18 @@ def test_flatten_returns_list_of_dicts():
 
 
 def test_flatten_position_is_positive_int():
-    sections = flatten(parse_html(_read(ACT_11)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html(_read(ACT_11)))
     for s in sections:
         assert isinstance(s["position"], int)
         assert s["position"] >= 1
 
 
 def test_flatten_section_types_are_valid():
-    from indexer.parse_statute import SECTION_TYPES
-
-    sections = flatten(parse_html(_read(ACT_11)))
+    sp = StatuteParser(path=ACT_11)
+    sp.read()
+    sections = flatten(sp.parse_html())
     for s in sections:
         assert s["section_type"] in SECTION_TYPES, f"Unknown type: {s['section_type']}"
 

@@ -210,7 +210,6 @@ class StatuteParser:
             return stack[-1]
 
         def append_node(node: StatuteNode, rank: int):
-            print(f"{node=}")
             parent = current_parent_for(rank)
             print(f"{parent=}")
             pos = position_counters.get(id(parent), 0) + 1
@@ -260,8 +259,8 @@ class StatuteParser:
                         compound_ref = f"{current_section.section_ref}({ref})"
                     else:
                         compound_ref = f"({ref})"
-                        node = StatuteNode("subsection", compound_ref, "", text)
-                        append_node(node, RANKS["subsection"])
+                    node = StatuteNode("subsection", compound_ref, "", text)
+                    append_node(node, RANKS["subsection"])
 
                 elif stype in ("paragraph", "subparagraph"):
                     node = StatuteNode(stype, ref, "", text)
@@ -460,8 +459,9 @@ def debug_structure(html_path: str, max_nodes: int = 80) -> list:
     """Print the detected section tree of an act HTML file."""
     with open(html_path, encoding="utf-8") as f:
         html = f.read()
-
-    root = parse_html(html)
+    sp = StatuteParser(path=Path(html_path))
+    sp.read()
+    root = sp.parse_html(html)
     rows = flatten(root)
     if not max_nodes:
         max_nodes = len(rows)

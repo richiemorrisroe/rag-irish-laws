@@ -20,6 +20,8 @@ import pprint
 import re
 import sys
 
+from pathlib import Path
+
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.core.schema import Document
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -50,7 +52,8 @@ def ingest_file(
     Parse one HTML file, insert into DB, optionally embed sections.
     Returns the law_id.
     """
-    parser = StatuteParser()
+    parser = StatuteParser(path=Path(html_path))
+    parser.read()
     parsed = _year_and_number_from_path(html_path)
     if not parsed:
         raise ValueError(f"Cannot determine year/act_number from path: {html_path}")
@@ -59,7 +62,7 @@ def ingest_file(
     with open(html_path, encoding="utf-8") as f:
         html = f.read()
     
-    root = parser.parse_html(html, law_name=law_name, year=year)
+    root = parser.parse_html(law_name=law_name, year=year)
     if not law_name:
         law_name = root.section_title or f"Act {act_number} of {year}"
 
