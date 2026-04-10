@@ -36,3 +36,10 @@ def test_statute_parser_can_get_ranks():
     s = StatuteParser(path = ACT_38)
     s.read()
     assert isinstance(s.get_ranks(), dict)
+
+def test_statute_parser_has_a_stack():
+    s = StatuteParser(path = ACT_38)
+    s.read()
+    assert s.stack is not None
+
+

@@ -126,6 +126,7 @@ class StatuteParser:
         self.statute_path = path
         self.statute_nodes = StatuteNode
         self.statute_text = None
+        self.stack: list[StatuteNode] = []
 
     def read(self) -> str:
         statute_text = self.statute_path.read_text(encoding="utf-8")
@@ -135,7 +136,7 @@ class StatuteParser:
     def parse(self) -> StatuteNode:
         if not self.statute_text:
             self.read()
-        res = self.parse_html(self.statute_text)
+        res = self.parse_html()
         self.statute_nodes = res
         return res
 
@@ -153,6 +154,10 @@ class StatuteParser:
         }
         self.ranks = RANKS
         return RANKS
+
+    def make_stack(self):
+        pass
+        
 
     def parse_html(self, law_name: str = "", year: int = 0) -> StatuteNode:
         """
@@ -200,12 +205,13 @@ class StatuteParser:
         #     "subparagraph": 5,
         # }
 
-        stack: list[StatuteNode] = [root]
+        self.stack: list[StatuteNode] = [root]
         position_counters: dict[int, int] = {0: 0}  # rank → counter
 
         def current_parent_for(rank: int) -> StatuteNode:
             # Pop stack until top has rank < new rank
-            while len(stack) > 1 and RANKS.get(stack[-1].section_type, 0) >= rank:
+            stack = self.stack
+            while len(self.stack) > 1 and RANKS.get(self.stack[-1].section_type, 0) >= rank:
                 stack.pop()
             return stack[-1]
 
@@ -216,7 +222,7 @@ class StatuteParser:
             position_counters[id(parent)] = pos
             node.position = pos
             parent.children.append(node)
-            stack.append(node)
+            self.stack.append(node)
 
         current_section: Optional[StatuteNode] = None  # track for section_ref like "7(2)"
 
@@ -289,134 +295,7 @@ class StatuteParser:
         
         
 
-# def parse_html(html: str, law_name: str = "", year: int = 0) -> StatuteNode:
-#     """
-#     Parse statute HTML and return a StatuteNode tree rooted at the act level.
-#     """
-#     soup = BeautifulSoup(html, "lxml")
-#     tables = soup.find_all("table")
-#     # breakpoint()
-#     if not tables:
-#         # Fallback: grab all body text
-#         return StatuteNode(
-#             "act", "", law_name, soup.get_text(separator="\n", strip=True)
-#         )
 
-#     main_table = tables[0]
-#     rows = main_table.find_all("tr")
-#     # extract_act_title(rows)
-#     # Extract act title from the HTML (all-caps line containing "ACT", before "BE IT ENACTED")
-#     if not law_name:
-#         for row in rows:
-#             cells = row.find_all("td")
-#             if len(cells) < 3:
-#                 continue
-#             c2 = cells[2].get_text(separator=" ", strip=True)
-#             if "ENACTED" in c2.upper():
-#                 break
-#             if c2.isupper() and "ACT" in c2:
-#                 law_name = c2.title()  # convert ALL-CAPS to Title Case
-#                 break
-
-#     root = StatuteNode("act", "", law_name, "")
-#     # create_stack_and_position_counters(root) -> (stack, position_counters)
-#     # Stack tracks current nesting:  list of (node, depth_rank)
-#     # depth_rank:  act=0, part/schedule=1, section=2, subsection=3, paragraph=4, subparagraph=5
-#     RANKS = {
-#         "act": 0,
-#         "part": 1,
-#         "schedule": 1,
-#         "chapter": 1,
-#         "section": 2,
-#         "article": 2,
-#         "subsection": 3,
-#         "paragraph": 4,
-#         "subparagraph": 5,
-#     }
-
-#     stack: list[StatuteNode] = [root]
-#     position_counters: dict[int, int] = {0: 0}  # rank → counter
-
-#     def current_parent_for(rank: int) -> StatuteNode:
-#         # Pop stack until top has rank < new rank
-#         while len(stack) > 1 and RANKS.get(stack[-1].section_type, 0) >= rank:
-#             stack.pop()
-#         return stack[-1]
-
-#     def append_node(node: StatuteNode, rank: int):
-#         parent = current_parent_for(rank)
-#         pos = position_counters.get(id(parent), 0) + 1
-#         position_counters[id(parent)] = pos
-#         node.position = pos
-#         parent.children.append(node)
-#         stack.append(node)
-
-#     current_section: Optional[StatuteNode] = None  # track for section_ref like "7(2)"
-
-#     past_enactment = False  # skip table-of-contents rows before "BE IT ENACTED"
-#     # also extract_act_title, for some reason???
-#     for row in rows:
-#         cells = row.find_all("td")
-#         if len(cells) < 3:
-#             continue
-
-#         c0 = cells[0].get_text(strip=True)
-#         c1 = cells[1].get_text(strip=True)
-#         c2 = cells[2].get_text(separator=" ", strip=True)
-
-#         if not c2:
-#             continue
-
-#         if not past_enactment:
-#             if "BE IT ENACTED" in c2.upper() or "HEREBY ENACTED" in c2.upper():
-#                 past_enactment = True
-#                 # Capture the act title from the "Number N of YEAR" line if seen before
-#             continue
-
-#         # Classify row — pass c1 so section detection knows whether a title is present
-#         classification = _classify_row(c2, c1)
-
-#         if classification:
-#             stype, ref, text = classification
-
-#             if stype == "section":
-#                 node = StatuteNode("section", ref, c1, text)
-#                 append_node(node, RANKS["section"])
-#                 current_section = node
-
-#             elif stype == "subsection":
-#                 # Build compound ref: "7(2)"
-#                 if current_section:
-#                     compound_ref = f"{current_section.section_ref}({ref})"
-#                 else:
-#                     compound_ref = f"({ref})"
-#                 node = StatuteNode("subsection", compound_ref, "", text)
-#                 append_node(node, RANKS["subsection"])
-
-#             elif stype in ("paragraph", "subparagraph"):
-#                 node = StatuteNode(stype, ref, "", text)
-#                 append_node(node, RANKS[stype])
-
-#             elif stype in ("part", "schedule", "chapter", "article"):
-#                 node = StatuteNode(stype, ref, text, "")
-#                 append_node(node, RANKS[stype])
-#                 if stype in ("part", "schedule"):
-#                     current_section = None  # reset section tracking across parts
-#                 elif stype == "article":
-#                     current_section = (
-#                         node  # track article as parent for subsection refs
-#                     )
-
-#         else:
-#             # Plain continuation text — append to the most recent node on stack
-#             if len(stack) > 1:
-#                 target = stack[-1]
-#                 if target.text_content:
-#                     target.text_content += "\n" + c2
-#                 else:
-#                     target.text_content = c2
-
-#     return root
 
 
 # ---------------------------------------------------------------------------
